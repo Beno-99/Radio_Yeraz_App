@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "42390681803",
+    "project_id": "radio-yeraz",
+    "storage_bucket": "radio-yeraz.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:42390681803:android:61f00aa0d0cc6c854a834e",
+        "android_client_info": {
+          "package_name": "com.radioyeraz.radioyeraz"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjbBMr531jcr1XBILzYFjT1jG5KUAnEQ8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
