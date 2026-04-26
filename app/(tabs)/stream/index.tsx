@@ -25,6 +25,7 @@ import {
   Image,
   Linking,
   LogBox,
+  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -47,6 +48,10 @@ LogBox.ignoreLogs(["Unable to activate keep awake", "Uncaught (in promise"]);
 const STREAM_URL = "https://streaming05.liveboxstream.uk/proxy/radioye3/stream";
 const STREAM_METADATA_URL = process.env.EXPO_PUBLIC_STREAM_METADATA_URL || "";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
+const ARTWORK_URL =
+  Platform.OS === "ios"
+    ? "https://radioyeraz.com/radioLogo-1024.jpg"
+    : "https://radioyeraz.com/radioLogo-512.jpg";
 
 const fallbackImage = require("@/assets/images/sublogo.png");
 
@@ -97,7 +102,7 @@ export default function RadioPlayer() {
 
   const router = useRouter();
 
-  // Configure audio session for background/silent playback
+  // ✅ 1. Configure audio session for background/silent playback
   useEffect(() => {
     setAudioModeAsync({
       playsInSilentMode: true,
@@ -106,7 +111,20 @@ export default function RadioPlayer() {
     }).catch(() => {});
   }, []);
 
-  // Firebase notifications setup
+  // ✅ 2. Sync lock screen metadata whenever nowPlaying or isPlaying changes
+  useEffect(() => {
+    if (isPlaying) {
+      player.setActiveForLockScreen(true, {
+        title: nowPlaying || "LIVE STREAM",
+        artist: "Radio Yeraz • Syria",
+        albumTitle: "Radio Yeraz",
+        // artworkUrl: ARTWORK_URL,
+        artworkUrl: "https://radioyeraz.com/radioLogo-1024.jpg",
+      });
+    }
+  }, [nowPlaying, isPlaying]);
+
+  // ✅ 3. Firebase notifications setup
   useEffect(() => {
     const setupNotifications = async () => {
       try {
@@ -123,9 +141,6 @@ export default function RadioPlayer() {
             console.log("A new FCM message arrived!", remoteMessage);
             const postId = remoteMessage.data?.postId;
             console.log("Post ID from notification:", postId);
-            // if (postId) {
-            //   navigate("PostDetail", { id: postId });
-            // }
             if (postId) {
               router.push({
                 pathname: "/post/[id]",
@@ -262,7 +277,7 @@ export default function RadioPlayer() {
     }
   }, [isPlaying, wave1, wave2, wave3]);
 
-  // Sync playing state from player
+  // ✅ Sync isPlaying state from player — this is what drives the lock screen effect above
   useEffect(() => {
     const interval = setInterval(() => {
       setIsPlaying(player.playing ?? false);
@@ -302,7 +317,17 @@ export default function RadioPlayer() {
   };
 
   const togglePlayback = () => {
-    player.playing ? player.pause() : player.play();
+    if (player.playing) {
+      player.pause();
+      player.setActiveForLockScreen(false);
+    } else {
+      player.setActiveForLockScreen(true, {
+        title: nowPlaying || "LIVE STREAM",
+        artist: "Radio Yeraz • Syria",
+        albumTitle: "Radio Yeraz",
+      });
+      player.play();
+    }
   };
 
   const animatedWave1 = useAnimatedStyle(() => ({

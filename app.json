@@ -11,7 +11,10 @@
     "ios": {
       "icon": "./assets/images/radioLogo.png",
       "supportsTablet": true,
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "infoPlist": {
+        "UIBackgroundModes": ["audio"]
+      }
     },
     "android": {
       "icon": "./assets/images/radioLogo.png",
@@ -25,7 +28,9 @@
       "predictiveBackGestureEnabled": false,
       "permissions": [
         "android.permission.RECORD_AUDIO",
-        "android.permission.MODIFY_AUDIO_SETTINGS"
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ],
       "package": "com.radioyeraz.radioyeraz",
       "googleServicesFile": "./google-services.json"
@@ -53,6 +58,12 @@
       "expo-asset",
       "@react-native-firebase/app",
       "@react-native-firebase/messaging",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false
+        }
+      ],
       [
         "expo-build-properties",
         {
