@@ -117,7 +117,7 @@ export default function NotificationDropdown({
       >
         <Text style={styles.notifIcon}>{typeIcon[item.type] || "🔔"}</Text>
         <View style={styles.notifContent}>
-          <Text style={styles.notifTitle} numberOfLines={1}>
+          <Text style={styles.notifTitle} numberOfLines={3}>
             {item.title}
           </Text>
           {showMessage && item.message ? (
@@ -220,6 +220,7 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     paddingHorizontal: 14,
     paddingVertical: 12,
+    minHeight: 72,
     borderBottomWidth: 1,
     borderBottomColor: "rgba(255,255,255,0.05)",
     gap: 10,
@@ -232,6 +233,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: "700",
     marginBottom: 3,
+    lineHeight: 18,
   },
   notifTime: { color: "#6b7280", fontSize: 11, marginTop: 4 },
   unreadDot: {

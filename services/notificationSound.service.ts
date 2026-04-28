@@ -1,5 +1,5 @@
 // services/notificationSound.service.ts
-import { useAudioPlayer } from "expo-audio";
+import { Audio } from "expo-av";
 import { Platform, Vibration } from "react-native";
 
 class NotificationSoundService {

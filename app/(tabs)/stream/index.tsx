@@ -15,7 +15,6 @@ import {
 } from "@react-native-firebase/messaging";
 import { setAudioModeAsync, useAudioPlayer } from "expo-audio";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -100,8 +99,6 @@ export default function RadioPlayer() {
   const wave2 = useSharedValue(0);
   const wave3 = useSharedValue(0);
 
-  const router = useRouter();
-
   // ✅ 1. Configure audio session for background/silent playback
   useEffect(() => {
     setAudioModeAsync({
@@ -129,7 +126,7 @@ export default function RadioPlayer() {
     const setupNotifications = async () => {
       try {
         await getDeviceToken();
-        await subscribeToTopicHandler("all");
+        await subscribeToTopicHandler("client");
 
         const hasPermission = await requestUserPermission();
 
@@ -141,12 +138,6 @@ export default function RadioPlayer() {
             console.log("A new FCM message arrived!", remoteMessage);
             const postId = remoteMessage.data?.postId;
             console.log("Post ID from notification:", postId);
-            if (postId) {
-              router.push({
-                pathname: "/post/[id]",
-                params: { id: String(postId) },
-              });
-            }
           });
 
           return unsubscribe;
@@ -173,10 +164,14 @@ export default function RadioPlayer() {
   const fetchAds = useCallback(async (silent = false) => {
     try {
       if (!silent) setAdsLoading(true);
+
       const { data } = await mobileApi.get("/ads", {
         params: { isActive: true },
       });
-      setAds(data?.data ?? []);
+
+      const validAds = (data?.data ?? []).filter((ad: any) => ad.isActive);
+
+      setAds(validAds);
     } catch (err: any) {
       console.log("Ads fetch error:", err);
     } finally {
@@ -194,6 +189,13 @@ export default function RadioPlayer() {
       },
     );
 
+    const refreshInterval = setInterval(
+      () => {
+        fetchAds(true);
+      },
+      60 * 60 * 1000,
+    );
+
     const handleAdminNotification = (data: any) => {
       if (
         ["AD_CREATED", "AD_UPDATED", "AD_DELETED", "AD_TOGGLED"].includes(
@@ -208,6 +210,7 @@ export default function RadioPlayer() {
 
     return () => {
       appStateSub.remove();
+      clearInterval(refreshInterval);
       socketService.off("admin_notification", handleAdminNotification);
     };
   }, [fetchAds]);
