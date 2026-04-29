@@ -1,7 +1,6 @@
 import PageHeader from "@/components/PageHeader";
 import { IMAGE_URL, mobileApi } from "@/services/mobileApi";
 import { requestUserPermission } from "@/services/notificationPermissions.service";
-import { socketService } from "@/services/socket.service";
 import { Ionicons } from "@expo/vector-icons";
 import { getApp } from "@react-native-firebase/app";
 import {
@@ -169,7 +168,26 @@ export default function RadioPlayer() {
         params: { isActive: true },
       });
 
-      const validAds = (data?.data ?? []).filter((ad: any) => ad.isActive);
+      const now = Date.now();
+      const validAds = (data?.data ?? []).filter((ad: any) => {
+        if (!ad?.isActive) return false;
+
+        const status = String(ad?.status ?? "").toLowerCase();
+        const isStatusValid =
+          status === "" ||
+          status === "approved" ||
+          status === "active" ||
+          status === "published";
+        if (!isStatusValid) return false;
+
+        const startAt = ad?.startDate ? new Date(ad.startDate).getTime() : NaN;
+        const endAt = ad?.endDate ? new Date(ad.endDate).getTime() : NaN;
+
+        const startsOk = !Number.isFinite(startAt) || now >= startAt;
+        const endsOk = !Number.isFinite(endAt) || now <= endAt;
+
+        return startsOk && endsOk;
+      });
 
       setAds(validAds);
     } catch (err: any) {
@@ -196,22 +214,9 @@ export default function RadioPlayer() {
       60 * 60 * 1000,
     );
 
-    const handleAdminNotification = (data: any) => {
-      if (
-        ["AD_CREATED", "AD_UPDATED", "AD_DELETED", "AD_TOGGLED"].includes(
-          data?.type,
-        )
-      ) {
-        fetchAds(true);
-      }
-    };
-
-    socketService.on("admin_notification", handleAdminNotification);
-
     return () => {
       appStateSub.remove();
       clearInterval(refreshInterval);
-      socketService.off("admin_notification", handleAdminNotification);
     };
   }, [fetchAds]);
 
