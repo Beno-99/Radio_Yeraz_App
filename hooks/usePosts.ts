@@ -1,7 +1,5 @@
 // hooks/usePosts.ts
 import { mobileApi } from "@/services/mobileApi";
-import { eventReminderService } from "@/services/eventReminder.service";
-import { socketService } from "@/services/socket.service";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, AppStateStatus } from "react-native";
 
@@ -13,34 +11,37 @@ export function usePosts() {
   const [refreshing, setRefreshing] = useState(false);
   const appStateRef = useRef(AppState.currentState);
 
+  const isExpired = (post: any) => {
+    if (!post?.expiresAt) return false;
+    const expiresAt = new Date(post.expiresAt).getTime();
+    return Number.isFinite(expiresAt) ? expiresAt < Date.now() : false;
+  };
+
   const fetchPosts = useCallback(async (silent = false) => {
     try {
       if (!silent) setLoading(true);
+
       const res = await mobileApi.get("/posts", {
         params: { limit: 50 },
       });
+
       const payload =
         res?.data?.data ?? res?.data?.posts ?? res?.data?.items ?? res?.data;
 
       const allPosts = Array.isArray(payload) ? payload : [];
 
-      // Only show published posts
-      const publishedPosts = allPosts.filter(
-        (post: any) => post.isPublished === true,
-      );
+      const activePosts = allPosts.filter((post: any) => {
+        const isPublished = post.isPublished === true;
+        const statusPublished = post.status === "published";
+        const expired = isExpired(post);
 
-      console.log(
-        `Total: ${allPosts.length}, Published: ${publishedPosts.length}`,
-      );
+        return isPublished && statusPublished && !expired;
+      });
 
-      setPosts(publishedPosts);
+      console.log(`Total: ${allPosts.length}, Active: ${activePosts.length}`);
 
-      // ← Schedule event reminders for tomorrow's events
-      try {
-        await eventReminderService.checkEventReminders(publishedPosts);
-      } catch (e: any) {
-        console.log("Event reminder error:", e?.message);
-      }
+      setPosts(activePosts);
+
     } catch (error: any) {
       console.log("Posts fetch error:", error?.message);
     } finally {
@@ -64,30 +65,9 @@ export function usePosts() {
       },
     );
 
-    const handleNewPost = () => {
-      fetchPosts(true);
-    };
-
-    const handleAdminNotification = (data: any) => {
-      if (
-        data?.type === "POST_DELETED" ||
-        data?.type === "POST_UPDATED" ||
-        data?.type === "POST_PUBLISHED" ||
-        data?.type === "AD_TOGGLED" ||
-        data?.type === "AD_DELETED"
-      ) {
-        fetchPosts(true);
-      }
-    };
-
-    socketService.on("new_notification", handleNewPost);
-    socketService.on("admin_notification", handleAdminNotification);
-
     return () => {
       clearInterval(interval);
       appStateSub.remove();
-      socketService.off("new_notification", handleNewPost);
-      socketService.off("admin_notification", handleAdminNotification);
     };
   }, [fetchPosts]);
 
