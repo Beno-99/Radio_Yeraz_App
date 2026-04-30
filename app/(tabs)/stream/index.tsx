@@ -13,7 +13,11 @@ import {
   setBackgroundMessageHandler,
   subscribeToTopic,
 } from "@react-native-firebase/messaging";
-import { setAudioModeAsync, useAudioPlayer } from "expo-audio";
+import {
+  setAudioModeAsync,
+  useAudioPlayer,
+  useAudioPlayerStatus,
+} from "expo-audio";
 import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -41,7 +45,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// Suppress keep-awake non-fatal error from expo-audio internals
 LogBox.ignoreLogs(["Unable to activate keep awake", "Uncaught (in promise"]);
 
 const STREAM_URL = "https://streaming05.liveboxstream.uk/proxy/radioye3/stream";
@@ -79,7 +82,6 @@ async function subscribeToTopicHandler(topic: string) {
 }
 
 export default function RadioPlayer() {
-  const [isPlaying, setIsPlaying] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [autoPlayEnabled] = useState(true);
   const [nowPlaying, setNowPlaying] = useState("Loading...");
@@ -90,14 +92,20 @@ export default function RadioPlayer() {
   const autoPlayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const player = useAudioPlayer({ uri: STREAM_URL });
+  const status = useAudioPlayerStatus(player);
 
   const wave1 = useSharedValue(0);
   const wave2 = useSharedValue(0);
   const wave3 = useSharedValue(0);
+  const spin = useSharedValue(0);
 
   const router = useRouter();
 
-  // Configure audio session for background/silent playback
+  const isPlaying = status?.playing ?? false;
+  const isBuffering = status?.isBuffering ?? false;
+  // const isBuffering = !status?.playing;
+  const showSpinner = isBuffering;
+
   useEffect(() => {
     setAudioModeAsync({
       playsInSilentMode: true,
@@ -106,7 +114,17 @@ export default function RadioPlayer() {
     }).catch(() => {});
   }, []);
 
-  // Firebase notifications setup
+  useEffect(() => {
+    if (isPlaying) {
+      player.setActiveForLockScreen(true, {
+        title: nowPlaying || "LIVE STREAM",
+        artist: "Radio Yeraz • Syria",
+        albumTitle: "Radio Yeraz",
+        artworkUrl: "https://www.radioyeraz.com/radioLogo-300.jpg",
+      });
+    }
+  }, [nowPlaying, isPlaying]);
+
   useEffect(() => {
     const setupNotifications = async () => {
       try {
@@ -116,22 +134,10 @@ export default function RadioPlayer() {
         const hasPermission = await requestUserPermission();
 
         if (hasPermission) {
-          const token = await getToken(messaging);
-          console.log("FCM Token:", token);
+          await getToken(messaging);
 
           const unsubscribe = onMessage(messaging, async (remoteMessage) => {
             console.log("A new FCM message arrived!", remoteMessage);
-            const postId = remoteMessage.data?.postId;
-            console.log("Post ID from notification:", postId);
-            // if (postId) {
-            //   navigate("PostDetail", { id: postId });
-            // }
-            if (postId) {
-              router.push({
-                pathname: "/post/[id]",
-                params: { id: String(postId) },
-              });
-            }
           });
 
           return unsubscribe;
@@ -154,7 +160,6 @@ export default function RadioPlayer() {
     };
   }, []);
 
-  // Fetch ads
   const fetchAds = useCallback(async (silent = false) => {
     try {
       if (!silent) setAdsLoading(true);
@@ -197,7 +202,6 @@ export default function RadioPlayer() {
     };
   }, [fetchAds]);
 
-  // Now playing metadata
   useEffect(() => {
     let isMounted = true;
 
@@ -207,27 +211,26 @@ export default function RadioPlayer() {
         return;
       }
 
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 6000);
-
       try {
-        const response = await fetch(STREAM_METADATA_URL, {
-          signal: controller.signal,
-          headers: { Accept: "application/json" },
-        });
+        const response = await fetch(STREAM_METADATA_URL);
+        const text = await response.text(); // Get raw text first to debug
 
-        if (!response.ok) return;
+        console.log("RAW METADATA RESPONSE:", text); // CRITICAL: Check this in your terminal
 
-        const data = await response.json();
-        const title =
-          data?.title || data?.nowPlaying || data?.streamTitle || "";
+        const data = JSON.parse(text);
 
-        if (isMounted && title.trim()) {
-          setNowPlaying(title.trim());
+        // --- EXTRACT TITLE ---
+        // If your log shows the title is inside a specific field,
+        // replace "title" below with that field name.
+        const songTitle =
+          data.title || data.song || data.nowPlaying || "LIVE STREAM";
+
+        if (isMounted) {
+          setNowPlaying(songTitle);
         }
-      } catch {
-      } finally {
-        clearTimeout(timeout);
+      } catch (err) {
+        console.log("Metadata error:", err);
+        if (isMounted) setNowPlaying("LIVE STREAM");
       }
     };
 
@@ -240,7 +243,6 @@ export default function RadioPlayer() {
     };
   }, []);
 
-  // Wave animations
   useEffect(() => {
     if (isPlaying) {
       wave1.value = withRepeat(withTiming(1, { duration: 2000 }), -1);
@@ -262,16 +264,15 @@ export default function RadioPlayer() {
     }
   }, [isPlaying, wave1, wave2, wave3]);
 
-  // Sync playing state from player
   useEffect(() => {
-    const interval = setInterval(() => {
-      setIsPlaying(player.playing ?? false);
-    }, 400);
+    if (showSpinner) {
+      spin.value = withRepeat(withTiming(1, { duration: 1400 }), -1, false);
+    } else {
+      cancelAnimation(spin);
+      spin.value = 0;
+    }
+  }, [showSpinner, spin]);
 
-    return () => clearInterval(interval);
-  }, [player]);
-
-  // Auto-scroll carousel
   useEffect(() => {
     const items = ads.length > 0 ? ads : [fallbackImage];
     if (items.length <= 1 || !autoPlayEnabled) return;
@@ -302,7 +303,18 @@ export default function RadioPlayer() {
   };
 
   const togglePlayback = () => {
-    player.playing ? player.pause() : player.play();
+    if (player.playing) {
+      player.pause();
+      player.setActiveForLockScreen(false);
+    } else {
+      player.setActiveForLockScreen(true, {
+        title: nowPlaying || "LIVE STREAM",
+        artist: "Radio Yeraz • Syria",
+        albumTitle: "Radio Yeraz",
+        artworkUrl: "https://www.radioyeraz.com/radioLogo-300.jpg",
+      });
+      player.play();
+    }
   };
 
   const animatedWave1 = useAnimatedStyle(() => ({
@@ -318,6 +330,10 @@ export default function RadioPlayer() {
   const animatedWave3 = useAnimatedStyle(() => ({
     transform: [{ scale: 1 + wave3.value * 0.6 }],
     opacity: 0.7 - wave3.value * 0.7,
+  }));
+
+  const animatedSpinner = useAnimatedStyle(() => ({
+    transform: [{ rotate: `${spin.value * 360}deg` }],
   }));
 
   const carouselItems = ads.length > 0 ? ads : [fallbackImage];
@@ -343,6 +359,11 @@ export default function RadioPlayer() {
             <Animated.View style={[styles.wave, styles.wave1, animatedWave1]} />
             <Animated.View style={[styles.wave, styles.wave2, animatedWave2]} />
             <Animated.View style={[styles.wave, styles.wave3, animatedWave3]} />
+
+            {showSpinner ? (
+              <Animated.View style={[styles.spinnerRing, animatedSpinner]} />
+            ) : null}
+
             <Image
               source={require("@/assets/images/radioLogo.jpg")}
               style={styles.logo}
@@ -350,7 +371,11 @@ export default function RadioPlayer() {
           </View>
 
           <View style={styles.nowPlayingContainer}>
-            <Text style={styles.songTitle}>{nowPlaying || "LIVE STREAM"}</Text>
+            <View style={styles.titleBadge}>
+              <Text style={styles.songTitle} numberOfLines={1}>
+                {nowPlaying || "LIVE STREAM"}
+              </Text>
+            </View>
             <Text style={styles.artistName}>Radio Yeraz • Syria</Text>
           </View>
 
@@ -498,9 +523,37 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: "#ffffff25",
   },
-  nowPlayingContainer: { alignItems: "center", marginBottom: 10 },
-  songTitle: { fontSize: 22, fontWeight: "bold", color: "#fff" },
-  artistName: { fontSize: 15, color: "#cbd5e1", marginTop: 4 },
+  spinnerRing: {
+    position: "absolute",
+    width: 210,
+    height: 210,
+    borderRadius: 105,
+    borderWidth: 4,
+    borderColor: "rgba(233, 69, 96, 0.8)",
+    borderTopColor: "transparent",
+  },
+  nowPlayingContainer: {
+    alignItems: "center",
+    marginBottom: 4,
+  },
+  titleBadge: {
+    backgroundColor: "rgba(15, 23, 42, 0.85)",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 16,
+    maxWidth: SCREEN_WIDTH - 60,
+  },
+  songTitle: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: "#fff",
+    textAlign: "center",
+  },
+  artistName: {
+    fontSize: 15,
+    color: "#cbd5e1",
+    marginTop: 8,
+  },
   controlsSection: { alignItems: "center", gap: 15, marginBottom: 20 },
   liveContainer: {
     flexDirection: "row",
@@ -528,7 +581,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.6,
     shadowRadius: 15,
     elevation: 5,
-    marginTop: -12,
+    marginTop: -10,
+    marginBottom: 3,
   },
   playButtonGradient: {
     width: 55,
@@ -539,31 +593,46 @@ const styles = StyleSheet.create({
   },
   carouselSection: {
     width: SCREEN_WIDTH,
-    height: 200,
+    height: 150,
     alignItems: "center",
-    marginTop: -10,
+    marginTop: -18,
   },
-  carouselScroll: { width: SCREEN_WIDTH, height: 155 },
+  carouselScroll: { width: SCREEN_WIDTH, height: 135 },
   carouselItem: {
     width: SCREEN_WIDTH,
-    height: 155,
+    height: 135,
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
   },
-  carouselImage: { width: SCREEN_WIDTH - 40, height: 145, borderRadius: 16 },
+  carouselImage: {
+    width: SCREEN_WIDTH - 40,
+    height: 125,
+    borderRadius: 16,
+  },
   paginationContainer: {
     flexDirection: "row",
-    justifyContent: "center",
     alignItems: "center",
+    justifyContent: "center",
     gap: 8,
+    marginTop: 4,
+    paddingHorizontal: 14,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: "rgba(15, 23, 42, 0.45)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
   },
   paginationDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "rgba(255,255,255,0.4)",
-    marginBottom: 36,
+    width: 7,
+    height: 7,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.35)",
   },
-  activePaginationDot: { backgroundColor: "#e94560", width: 18 },
+  activePaginationDot: {
+    width: 20,
+    height: 7,
+    borderRadius: 999,
+    backgroundColor: "#e94560",
+  },
 });
