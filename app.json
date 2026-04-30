@@ -65,6 +65,19 @@
         }
       ],
       [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": true
+        }
+      ],
+      [
+        "expo-av",
+        {
+          "microphonePermission": "none",
+          "cameraPermission": "none"
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
