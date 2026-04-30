@@ -1,6 +1,7 @@
 import PageHeader from "@/components/PageHeader";
 import { IMAGE_URL, mobileApi } from "@/services/mobileApi";
 import { requestUserPermission } from "@/services/notificationPermissions.service";
+import { socketService } from "@/services/socket.service";
 import { Ionicons } from "@expo/vector-icons";
 import { getApp } from "@react-native-firebase/app";
 import {
@@ -14,6 +15,7 @@ import {
 } from "@react-native-firebase/messaging";
 import { setAudioModeAsync, useAudioPlayer } from "expo-audio";
 import { LinearGradient } from "expo-linear-gradient";
+import { useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -23,7 +25,6 @@ import {
   Image,
   Linking,
   LogBox,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -46,10 +47,6 @@ LogBox.ignoreLogs(["Unable to activate keep awake", "Uncaught (in promise"]);
 const STREAM_URL = "https://streaming05.liveboxstream.uk/proxy/radioye3/stream";
 const STREAM_METADATA_URL = process.env.EXPO_PUBLIC_STREAM_METADATA_URL || "";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-const ARTWORK_URL =
-  Platform.OS === "ios"
-    ? "https://radioyeraz.com/radioLogo-1024.jpg"
-    : "https://radioyeraz.com/radioLogo-512.jpg";
 
 const fallbackImage = require("@/assets/images/sublogo.png");
 
@@ -98,7 +95,9 @@ export default function RadioPlayer() {
   const wave2 = useSharedValue(0);
   const wave3 = useSharedValue(0);
 
-  // ✅ 1. Configure audio session for background/silent playback
+  const router = useRouter();
+
+  // Configure audio session for background/silent playback
   useEffect(() => {
     setAudioModeAsync({
       playsInSilentMode: true,
@@ -107,25 +106,12 @@ export default function RadioPlayer() {
     }).catch(() => {});
   }, []);
 
-  // ✅ 2. Sync lock screen metadata whenever nowPlaying or isPlaying changes
-  useEffect(() => {
-    if (isPlaying) {
-      player.setActiveForLockScreen(true, {
-        title: nowPlaying || "LIVE STREAM",
-        artist: "Radio Yeraz • Syria",
-        albumTitle: "Radio Yeraz",
-        // artworkUrl: ARTWORK_URL,
-        artworkUrl: "https://radioyeraz.com/radioLogo-1024.jpg",
-      });
-    }
-  }, [nowPlaying, isPlaying]);
-
-  // ✅ 3. Firebase notifications setup
+  // Firebase notifications setup
   useEffect(() => {
     const setupNotifications = async () => {
       try {
         await getDeviceToken();
-        await subscribeToTopicHandler("client");
+        await subscribeToTopicHandler("all");
 
         const hasPermission = await requestUserPermission();
 
@@ -137,6 +123,15 @@ export default function RadioPlayer() {
             console.log("A new FCM message arrived!", remoteMessage);
             const postId = remoteMessage.data?.postId;
             console.log("Post ID from notification:", postId);
+            // if (postId) {
+            //   navigate("PostDetail", { id: postId });
+            // }
+            if (postId) {
+              router.push({
+                pathname: "/post/[id]",
+                params: { id: String(postId) },
+              });
+            }
           });
 
           return unsubscribe;
@@ -163,33 +158,10 @@ export default function RadioPlayer() {
   const fetchAds = useCallback(async (silent = false) => {
     try {
       if (!silent) setAdsLoading(true);
-
       const { data } = await mobileApi.get("/ads", {
         params: { isActive: true },
       });
-
-      const now = Date.now();
-      const validAds = (data?.data ?? []).filter((ad: any) => {
-        if (!ad?.isActive) return false;
-
-        const status = String(ad?.status ?? "").toLowerCase();
-        const isStatusValid =
-          status === "" ||
-          status === "approved" ||
-          status === "active" ||
-          status === "published";
-        if (!isStatusValid) return false;
-
-        const startAt = ad?.startDate ? new Date(ad.startDate).getTime() : NaN;
-        const endAt = ad?.endDate ? new Date(ad.endDate).getTime() : NaN;
-
-        const startsOk = !Number.isFinite(startAt) || now >= startAt;
-        const endsOk = !Number.isFinite(endAt) || now <= endAt;
-
-        return startsOk && endsOk;
-      });
-
-      setAds(validAds);
+      setAds(data?.data ?? []);
     } catch (err: any) {
       console.log("Ads fetch error:", err);
     } finally {
@@ -207,16 +179,21 @@ export default function RadioPlayer() {
       },
     );
 
-    const refreshInterval = setInterval(
-      () => {
+    const handleAdminNotification = (data: any) => {
+      if (
+        ["AD_CREATED", "AD_UPDATED", "AD_DELETED", "AD_TOGGLED"].includes(
+          data?.type,
+        )
+      ) {
         fetchAds(true);
-      },
-      60 * 60 * 1000,
-    );
+      }
+    };
+
+    socketService.on("admin_notification", handleAdminNotification);
 
     return () => {
       appStateSub.remove();
-      clearInterval(refreshInterval);
+      socketService.off("admin_notification", handleAdminNotification);
     };
   }, [fetchAds]);
 
@@ -285,7 +262,7 @@ export default function RadioPlayer() {
     }
   }, [isPlaying, wave1, wave2, wave3]);
 
-  // ✅ Sync isPlaying state from player — this is what drives the lock screen effect above
+  // Sync playing state from player
   useEffect(() => {
     const interval = setInterval(() => {
       setIsPlaying(player.playing ?? false);
@@ -325,17 +302,7 @@ export default function RadioPlayer() {
   };
 
   const togglePlayback = () => {
-    if (player.playing) {
-      player.pause();
-      player.setActiveForLockScreen(false);
-    } else {
-      player.setActiveForLockScreen(true, {
-        title: nowPlaying || "LIVE STREAM",
-        artist: "Radio Yeraz • Syria",
-        albumTitle: "Radio Yeraz",
-      });
-      player.play();
-    }
+    player.playing ? player.pause() : player.play();
   };
 
   const animatedWave1 = useAnimatedStyle(() => ({
