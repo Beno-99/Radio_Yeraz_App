@@ -59,6 +59,8 @@ function PostCard({
 }: any) {
   const { width: screenWidth } = useWindowDimensions();
   const videoRef = useRef<VideoRef>(null);
+  // Separate ref for the fullscreen video instance
+  const fullscreenVideoRef = useRef<VideoRef>(null);
 
   const [playing, setPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
@@ -71,6 +73,7 @@ function PostCard({
   const [fullscreenProgressTrackWidth, setFullscreenProgressTrackWidth] =
     useState(0);
   const router = useRouter();
+
   const hasVideo = item?.video && item.video.trim() !== "";
   const hasImage = item?.mainImage && item.mainImage.trim() !== "";
 
@@ -133,7 +136,6 @@ function PostCard({
 
   const toggleVideo = () => {
     if (!hasVideo) return;
-
     if (playing) {
       setPlaying(false);
       setShowControls(true);
@@ -143,20 +145,26 @@ function PostCard({
     }
   };
 
-  const toggleMute = () => {
-    setIsMuted((prev) => !prev);
-  };
+  const toggleMute = () => setIsMuted((prev) => !prev);
 
   const openFullscreen = () => {
+    // Pause the card video before switching — fullscreen video will resume
+    setPlaying(false);
     setIsFullscreen(true);
     StatusBar.setHidden(true);
     setShowControls(true);
   };
 
   const closeFullscreen = () => {
+    // Pause fullscreen video, card video will resume from saved positionMillis
+    setPlaying(false);
     setIsFullscreen(false);
     StatusBar.setHidden(false);
     setShowControls(true);
+    // Resume card video at the saved position
+    setTimeout(() => {
+      videoRef.current?.seek(positionMillis / 1000);
+    }, 100);
   };
 
   const skipBy = (seconds: number) => {
@@ -165,7 +173,11 @@ function PostCard({
       0,
       Math.min(durationMillis, positionMillis + seconds * 1000),
     );
-    videoRef.current?.seek(nextMs / 1000);
+    if (isFullscreen) {
+      fullscreenVideoRef.current?.seek(nextMs / 1000);
+    } else {
+      videoRef.current?.seek(nextMs / 1000);
+    }
     setPositionMillis(nextMs);
   };
 
@@ -176,17 +188,19 @@ function PostCard({
     if (!hasVideo || durationMillis <= 0 || trackWidth <= 0) return;
     const locationX = Number(event?.nativeEvent?.locationX);
     if (!Number.isFinite(locationX)) return;
-
     const ratio = Math.max(0, Math.min(1, locationX / trackWidth));
     const nextMs = durationMillis * ratio;
-    videoRef.current?.seek(nextMs / 1000);
+    if (isFullscreen) {
+      fullscreenVideoRef.current?.seek(nextMs / 1000);
+    } else {
+      videoRef.current?.seek(nextMs / 1000);
+    }
     setPositionMillis(nextMs);
   };
 
   const renderVideoControls = (isFS: boolean) => (
     <>
       <View style={styles.controlsOverlayBg} pointerEvents="none" />
-
       <Pressable
         style={styles.controlsDismissLayer}
         onPress={() => setShowControls(false)}
@@ -200,7 +214,6 @@ function PostCard({
             color="#fff"
           />
         </Pressable>
-
         <Pressable
           style={styles.iconButton}
           onPress={isFS ? closeFullscreen : openFullscreen}
@@ -281,7 +294,6 @@ function PostCard({
             />
           </View>
         </Pressable>
-
         <Text style={styles.timeText}>
           {formatMs(positionMillis)} / {formatMs(durationMillis)}
         </Text>
@@ -289,12 +301,44 @@ function PostCard({
     </>
   );
 
-  const videoElement = (
+  // ─── Card Video (always rendered, hidden when fullscreen is open) ───────────
+  const cardVideoElement = (
     <Video
       ref={videoRef}
       source={{ uri: videoUri }}
       style={StyleSheet.absoluteFill}
-      resizeMode={isFullscreen ? "contain" : "cover"}
+      // FIX 1: "contain" respects 4:3 aspect ratio without cropping
+      resizeMode="contain"
+      paused={!playing || isFullscreen}
+      muted={isMuted}
+      repeat
+      controls={false}
+      playInBackground={false}
+      playWhenInactive={false}
+      ignoreSilentSwitch="ignore"
+      onLoad={({ duration }) => {
+        setDurationMillis(toSafeMs(duration * 1000));
+      }}
+      onProgress={({ currentTime }) => {
+        if (!isFullscreen) {
+          setPositionMillis(toSafeMs(currentTime * 1000));
+        }
+      }}
+      onEnd={() => {
+        setPlaying(false);
+        setShowControls(true);
+      }}
+    />
+  );
+
+  // ─── Fullscreen Video (separate instance that seeks to saved position) ──────
+  const fullscreenVideoElement = (
+    <Video
+      ref={fullscreenVideoRef}
+      source={{ uri: videoUri }}
+      style={StyleSheet.absoluteFill}
+      resizeMode="contain"
+      // FIX 2: auto-plays when fullscreen opens, sharing the same playing state
       paused={!playing}
       muted={isMuted}
       repeat
@@ -304,6 +348,11 @@ function PostCard({
       ignoreSilentSwitch="ignore"
       onLoad={({ duration }) => {
         setDurationMillis(toSafeMs(duration * 1000));
+        // FIX 2: Seek to where the card video was, then resume playback
+        const seekTo = positionMillis / 1000;
+        fullscreenVideoRef.current?.seek(seekTo);
+        setPlaying(true);
+        setShowControls(false);
       }}
       onProgress={({ currentTime }) => {
         setPositionMillis(toSafeMs(currentTime * 1000));
@@ -357,7 +406,7 @@ function PostCard({
           >
             {hasVideo ? (
               <>
-                {!isFullscreen && videoElement}
+                {cardVideoElement}
 
                 {!showControls && (
                   <Pressable
@@ -405,7 +454,6 @@ function PostCard({
             onPress={() => {
               const realId = String(item?._id || item?.id || "");
               if (!realId || realId === "[id]") return;
-
               router.push({
                 pathname: "/post/[id]",
                 params: { id: realId },
@@ -457,6 +505,7 @@ function PostCard({
           )}
         </View>
 
+        {/* ── Fullscreen Video Modal ─────────────────────────────────── */}
         <Modal
           visible={isFullscreen}
           transparent={false}
@@ -465,7 +514,7 @@ function PostCard({
           onRequestClose={closeFullscreen}
         >
           <View style={styles.fullscreenContainer}>
-            {videoElement}
+            {fullscreenVideoElement}
 
             {!showControls && (
               <Pressable
@@ -478,6 +527,7 @@ function PostCard({
           </View>
         </Modal>
 
+        {/* ── Image Viewer Modal ────────────────────────────────────── */}
         <Modal
           visible={isImageViewerVisible}
           transparent
@@ -492,7 +542,6 @@ function PostCard({
               >
                 <Ionicons name="close" size={30} color="#fff" />
               </Pressable>
-
               <ZoomableImage uri={imageUri} />
             </View>
           </GestureHandlerRootView>
