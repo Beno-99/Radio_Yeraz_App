@@ -1,3 +1,4 @@
+import EmptyState from "@/components/EmptyState";
 import PageHeader from "@/components/PageHeader";
 import PostCard from "@/components/PostCard";
 import { usePosts } from "@/hooks/usePosts";
@@ -18,6 +19,7 @@ export default function Posts() {
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { targetPostId, setTargetPostId } = useNavigationStore();
   const [isScrolling, setIsScrolling] = useState(false);
+  const isEmptyState = !loading && posts?.length === 0;
 
   useEffect(() => {
     if (!targetPostId || posts.length === 0) return;
@@ -74,7 +76,12 @@ export default function Posts() {
 
   const renderItem = useCallback(
     ({ item }: { item: any }) => (
-      <PostCard item={item} openMedia={openMedia} isScrolling={isScrolling} />
+      <PostCard
+        item={item}
+        openMedia={openMedia}
+        isScrolling={isScrolling}
+        isRefreshing={refreshing}
+      />
     ),
     [openMedia, isScrolling],
   );
@@ -116,6 +123,15 @@ export default function Posts() {
           size="large"
           color="#e94560"
           style={{ marginTop: 40 }}
+        />
+      ) : isEmptyState ? (
+        <EmptyState
+          title="No Posts Yet"
+          subtitle="Tune in later for updates"
+          logoSource={{
+            uri: "https://www.radioyeraz.com/radioLogoOrg-1024.png",
+          }}
+          logoSize={90}
         />
       ) : (
         <FlatList
