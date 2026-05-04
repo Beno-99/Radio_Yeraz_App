@@ -19,8 +19,7 @@ import {
   useAudioPlayerStatus,
 } from "expo-audio";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   AppState,
@@ -29,6 +28,7 @@ import {
   Image,
   Linking,
   LogBox,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -47,11 +47,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 LogBox.ignoreLogs(["Unable to activate keep awake", "Uncaught (in promise"]);
 
-const STREAM_URL = "https://streaming05.liveboxstream.uk/proxy/radioye3/stream";
+// const STREAM_URL = "https://streaming05.liveboxstream.uk/proxy/radioye3/stream";
+const STREAM_URL =
+  process.env.EXPO_PUBLIC_STREAM_URL ||
+  "https://streaming05.liveboxstream.uk/proxy/radioye3/stream";
 const STREAM_METADATA_URL = process.env.EXPO_PUBLIC_STREAM_METADATA_URL || "";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
-
 const fallbackImage = require("@/assets/images/sublogo.png");
+const [nowPlaying, setNowPlaying] = useState("Loading...");
+const [trackTitle, setTrackTitle] = useState("LIVE STREAM");
 
 const app = getApp();
 const messaging = getMessaging(app);
@@ -70,10 +74,10 @@ async function getDeviceToken() {
     const token = await getToken(messaging);
     console.log("FCM Token:", token);
     return token;
-  } else {
-    console.log("Permission denied");
-    return null;
   }
+
+  console.log("Permission denied");
+  return null;
 }
 
 async function subscribeToTopicHandler(topic: string) {
@@ -81,30 +85,15 @@ async function subscribeToTopicHandler(topic: string) {
   console.log("Subscribed to topic:", topic);
 }
 
-export default function RadioPlayer() {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [autoPlayEnabled] = useState(true);
-  const [nowPlaying, setNowPlaying] = useState("Loading...");
-  const [ads, setAds] = useState<any[]>([]);
-  const [adsLoading, setAdsLoading] = useState(true);
-
-  const scrollRef = useRef<ScrollView>(null);
-  const autoPlayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  const player = useAudioPlayer({ uri: STREAM_URL });
+function AudioPlayerComponent({
+  uri,
+  nowPlaying,
+}: {
+  uri: string;
+  nowPlaying: string;
+}) {
+  const player = useAudioPlayer({ uri });
   const status = useAudioPlayerStatus(player);
-
-  const wave1 = useSharedValue(0);
-  const wave2 = useSharedValue(0);
-  const wave3 = useSharedValue(0);
-  const spin = useSharedValue(0);
-
-  const router = useRouter();
-
-  const isPlaying = status?.playing ?? false;
-  const isBuffering = status?.isBuffering ?? false;
-  // const isBuffering = !status?.playing;
-  const showSpinner = isBuffering;
 
   useEffect(() => {
     setAudioModeAsync({
@@ -115,50 +104,41 @@ export default function RadioPlayer() {
   }, []);
 
   useEffect(() => {
-    if (isPlaying) {
+    if (status?.playing) {
       player.setActiveForLockScreen(true, {
         title: nowPlaying || "LIVE STREAM",
         artist: "Radio Yeraz • Syria",
         albumTitle: "Radio Yeraz",
-        artworkUrl: "https://www.radioyeraz.com/radioLogo-300.jpg",
+        artworkUrl: "https://www.radioyeraz.com/radiojpg",
       });
     }
-  }, [nowPlaying, isPlaying]);
+  }, [nowPlaying, status?.playing]);
 
-  useEffect(() => {
-    const setupNotifications = async () => {
-      try {
-        await getDeviceToken();
-        await subscribeToTopicHandler("all");
+  return null;
+}
 
-        const hasPermission = await requestUserPermission();
+export default function RadioPlayer() {
+  const [playerKey, setPlayerKey] = useState(0);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [autoPlayEnabled] = useState(true);
+  const [nowPlaying, setNowPlaying] = useState("Loading...");
+  const [ads, setAds] = useState<any[]>([]);
+  const [adsLoading, setAdsLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
-        if (hasPermission) {
-          await getToken(messaging);
+  const scrollRef = useRef<ScrollView>(null);
+  const autoPlayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-          const unsubscribe = onMessage(messaging, async (remoteMessage) => {
-            console.log("A new FCM message arrived!", remoteMessage);
-          });
+  const wave1 = useSharedValue(0);
+  const wave2 = useSharedValue(0);
+  const wave3 = useSharedValue(0);
+  const spin = useSharedValue(0);
 
-          return unsubscribe;
-        }
-      } catch (error) {
-        console.error("FCM Setup Error:", error);
-      }
+  const player = useAudioPlayer({ uri: STREAM_URL });
+  const status = useAudioPlayerStatus(player);
 
-      return undefined;
-    };
-
-    let unsubscribeForeground: undefined | (() => void);
-
-    setupNotifications().then((unsubscribe) => {
-      unsubscribeForeground = unsubscribe;
-    });
-
-    return () => {
-      if (unsubscribeForeground) unsubscribeForeground();
-    };
-  }, []);
+  const isPlaying = status?.playing ?? false;
+  const isBuffering = status?.isBuffering ?? false;
 
   const fetchAds = useCallback(async (silent = false) => {
     try {
@@ -172,6 +152,36 @@ export default function RadioPlayer() {
     } finally {
       setAdsLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    const setupNotifications = async () => {
+      try {
+        await getDeviceToken();
+        await subscribeToTopicHandler("all");
+        const hasPermission = await requestUserPermission();
+        if (hasPermission) {
+          await getToken(messaging);
+          const unsubscribe = onMessage(messaging, async (remoteMessage) => {
+            console.log("A new FCM message arrived!", remoteMessage);
+          });
+          return unsubscribe;
+        }
+      } catch (error) {
+        console.error("FCM Setup Error:", error);
+      }
+      return undefined;
+    };
+
+    let unsubscribeForeground: undefined | (() => void);
+
+    setupNotifications().then((unsubscribe) => {
+      unsubscribeForeground = unsubscribe;
+    });
+
+    return () => {
+      if (unsubscribeForeground) unsubscribeForeground();
+    };
   }, []);
 
   useEffect(() => {
@@ -203,43 +213,35 @@ export default function RadioPlayer() {
   }, [fetchAds]);
 
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
+    let interval: ReturnType<typeof setInterval> | null = null;
 
     const fetchNowPlaying = async () => {
-      if (!STREAM_METADATA_URL) {
-        if (isMounted) setNowPlaying("LIVE STREAM");
-        return;
-      }
+      if (!STREAM_METADATA_URL) return;
 
       try {
         const response = await fetch(STREAM_METADATA_URL);
-        const text = await response.text(); // Get raw text first to debug
+        const data = await response.json();
 
-        console.log("RAW METADATA RESPONSE:", text); // CRITICAL: Check this in your terminal
+        const source = data?.icestats?.source;
+        const stream = Array.isArray(source) ? source[0] : source;
 
-        const data = JSON.parse(text);
+        const title =
+          stream?.title || stream?.song || stream?.server_name || "LIVE STREAM";
 
-        // --- EXTRACT TITLE ---
-        // If your log shows the title is inside a specific field,
-        // replace "title" below with that field name.
-        const songTitle =
-          data.title || data.song || data.nowPlaying || "LIVE STREAM";
-
-        if (isMounted) {
-          setNowPlaying(songTitle);
-        }
-      } catch (err) {
-        console.log("Metadata error:", err);
-        if (isMounted) setNowPlaying("LIVE STREAM");
+        if (mounted) setTrackTitle(title);
+      } catch (error) {
+        console.log("Metadata error:", error);
+        if (mounted) setTrackTitle("LIVE STREAM");
       }
     };
 
     fetchNowPlaying();
-    const interval = setInterval(fetchNowPlaying, 30000);
+    interval = setInterval(fetchNowPlaying, 60000);
 
     return () => {
-      isMounted = false;
-      clearInterval(interval);
+      mounted = false;
+      if (interval) clearInterval(interval);
     };
   }, []);
 
@@ -262,22 +264,26 @@ export default function RadioPlayer() {
       wave2.value = withTiming(0, { duration: 300 });
       wave3.value = withTiming(0, { duration: 300 });
     }
-  }, [isPlaying, wave1, wave2, wave3]);
+  }, [isPlaying]);
 
   useEffect(() => {
-    if (showSpinner) {
+    if (isBuffering) {
       spin.value = withRepeat(withTiming(1, { duration: 1400 }), -1, false);
     } else {
       cancelAnimation(spin);
       spin.value = 0;
     }
-  }, [showSpinner, spin]);
+  }, [isBuffering]);
 
   useEffect(() => {
     const items = ads.length > 0 ? ads : [fallbackImage];
-    if (items.length <= 1 || !autoPlayEnabled) return;
 
-    if (autoPlayTimerRef.current) clearInterval(autoPlayTimerRef.current);
+    if (autoPlayTimerRef.current) {
+      clearInterval(autoPlayTimerRef.current);
+      autoPlayTimerRef.current = null;
+    }
+
+    if (items.length <= 1 || !autoPlayEnabled) return;
 
     autoPlayTimerRef.current = setInterval(() => {
       setCurrentIndex((prev) => {
@@ -291,7 +297,10 @@ export default function RadioPlayer() {
     }, 4000);
 
     return () => {
-      if (autoPlayTimerRef.current) clearInterval(autoPlayTimerRef.current);
+      if (autoPlayTimerRef.current) {
+        clearInterval(autoPlayTimerRef.current);
+        autoPlayTimerRef.current = null;
+      }
     };
   }, [autoPlayEnabled, ads]);
 
@@ -302,8 +311,15 @@ export default function RadioPlayer() {
     if (newIndex !== currentIndex) setCurrentIndex(newIndex);
   };
 
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([fetchAds(false)]);
+    setPlayerKey((prev) => prev + 1);
+    setRefreshing(false);
+  }, [fetchAds]);
+
   const togglePlayback = () => {
-    if (player.playing) {
+    if (isPlaying || player.playing) {
       player.pause();
       player.setActiveForLockScreen(false);
     } else {
@@ -345,135 +361,166 @@ export default function RadioPlayer() {
     >
       <PageHeader />
 
+      <AudioPlayerComponent
+        key={playerKey}
+        uri={STREAM_URL}
+        nowPlaying={nowPlaying}
+      />
+
       <SafeAreaView
         style={styles.container}
         edges={["bottom", "left", "right"]}
       >
-        <View style={styles.content}>
-          <View style={styles.headerSection}>
-            <Text style={styles.header}>RADIO YERAZ</Text>
-            <Text style={styles.subHeader}>Հայկական երաժշտութիուն 24/7</Text>
-          </View>
-
-          <View style={styles.logoContainer}>
-            <Animated.View style={[styles.wave, styles.wave1, animatedWave1]} />
-            <Animated.View style={[styles.wave, styles.wave2, animatedWave2]} />
-            <Animated.View style={[styles.wave, styles.wave3, animatedWave3]} />
-
-            {showSpinner ? (
-              <Animated.View style={[styles.spinnerRing, animatedSpinner]} />
-            ) : null}
-
-            <Image
-              source={require("@/assets/images/radioLogo.jpg")}
-              style={styles.logo}
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1 }}
+          scrollEnabled={false}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#ff4d6d"
+              colors={["#ff4d6d"]}
+              progressBackgroundColor="#1b2746"
             />
-          </View>
-
-          <View style={styles.nowPlayingContainer}>
-            <View style={styles.titleBadge}>
-              <Text style={styles.songTitle} numberOfLines={1}>
-                {nowPlaying || "LIVE STREAM"}
-              </Text>
+          }
+        >
+          <View style={styles.content}>
+            <View style={styles.headerSection}>
+              <Text style={styles.header}>RADIO YERAZ</Text>
+              <Text style={styles.subHeader}>Հայկական երաժշտութիուն 24/7</Text>
             </View>
-            <Text style={styles.artistName}>Radio Yeraz • Syria</Text>
-          </View>
 
-          <View style={styles.controlsSection}>
-            <View style={styles.liveContainer}>
-              <View
-                style={[
-                  styles.liveDot,
-                  isPlaying ? styles.liveDotOn : styles.liveDotOff,
-                ]}
+            <View style={styles.logoContainer}>
+              <Animated.View
+                style={[styles.wave, styles.wave1, animatedWave1]}
               />
-              <View style={styles.progressBar}>
-                <View
-                  style={[styles.progress, isPlaying && styles.progressActive]}
-                />
+              <Animated.View
+                style={[styles.wave, styles.wave2, animatedWave2]}
+              />
+              <Animated.View
+                style={[styles.wave, styles.wave3, animatedWave3]}
+              />
+
+              {isBuffering ? (
+                <Animated.View style={[styles.spinnerRing, animatedSpinner]} />
+              ) : null}
+
+              <Image
+                source={require("@/assets/images/radioLogo.jpg")}
+                style={styles.logo}
+              />
+            </View>
+
+            <View style={styles.nowPlayingContainer}>
+              <View style={styles.titleBadge}>
+                <Text style={styles.songTitle} numberOfLines={1}>
+                  {trackTitle}
+                </Text>
               </View>
-              <Text
-                style={[
-                  styles.liveText,
-                  isPlaying ? styles.liveTextOn : styles.liveTextOff,
-                ]}
-              >
-                {isPlaying ? "LIVE" : "PAUSED"}
-              </Text>
+              <Text style={styles.artistName}>Radio Yeraz • Syria</Text>
             </View>
 
-            <TouchableOpacity
-              style={styles.playButton}
-              onPress={togglePlayback}
-            >
-              <LinearGradient
-                colors={["#e94560", "#ff6b6b"]}
-                style={styles.playButtonGradient}
-              >
-                <Ionicons
-                  name={isPlaying ? "pause" : "play"}
-                  size={32}
-                  color="white"
-                  style={{ marginLeft: isPlaying ? 0 : 6 }}
+            <View style={styles.controlsSection}>
+              <View style={styles.liveContainer}>
+                <View
+                  style={[
+                    styles.liveDot,
+                    isPlaying ? styles.liveDotOn : styles.liveDotOff,
+                  ]}
                 />
-              </LinearGradient>
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.carouselSection}>
-            {adsLoading ? (
-              <ActivityIndicator
-                size="small"
-                color="#e94560"
-                style={{ marginTop: 50 }}
-              />
-            ) : (
-              <>
-                <ScrollView
-                  ref={scrollRef}
-                  horizontal
-                  pagingEnabled
-                  showsHorizontalScrollIndicator={false}
-                  onScroll={handleScroll}
-                  scrollEventThrottle={16}
-                  style={styles.carouselScroll}
-                >
-                  {carouselItems.map((item, index) => (
-                    <TouchableOpacity
-                      key={item._id || index}
-                      activeOpacity={item.targetUrl ? 0.7 : 1}
-                      onPress={() =>
-                        item.targetUrl && Linking.openURL(item.targetUrl)
-                      }
-                      disabled={!item.targetUrl}
-                      style={styles.carouselItem}
-                    >
-                      <Image
-                        source={
-                          item.image ? { uri: IMAGE_URL + item.image } : item
-                        }
-                        style={styles.carouselImage}
-                        resizeMode="cover"
-                      />
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-
-                <View style={styles.paginationContainer}>
-                  {carouselItems.map((_, i) => (
-                    <View
-                      key={i}
-                      style={[
-                        styles.paginationDot,
-                        currentIndex === i && styles.activePaginationDot,
-                      ]}
-                    />
-                  ))}
+                <View style={styles.progressBar}>
+                  <View
+                    style={[
+                      styles.progress,
+                      isPlaying && styles.progressActive,
+                    ]}
+                  />
                 </View>
-              </>
-            )}
+                <Text
+                  style={[
+                    styles.liveText,
+                    isPlaying ? styles.liveTextOn : styles.liveTextOff,
+                  ]}
+                >
+                  {isPlaying ? "LIVE" : "PAUSED"}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.playButton}
+                onPress={togglePlayback}
+                activeOpacity={0.8}
+              >
+                <LinearGradient
+                  colors={["#e94560", "#ff6b6b"]}
+                  style={styles.playButtonGradient}
+                >
+                  <Ionicons
+                    name={isPlaying ? "pause" : "play"}
+                    size={32}
+                    color="white"
+                    style={{ marginLeft: isPlaying ? 0 : 6 }}
+                  />
+                </LinearGradient>
+              </TouchableOpacity>
+            </View>
+
+            <View style={styles.carouselSection}>
+              {adsLoading ? (
+                <ActivityIndicator
+                  size="small"
+                  color="#e94560"
+                  style={{ marginTop: 50 }}
+                />
+              ) : (
+                <>
+                  <ScrollView
+                    ref={scrollRef}
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    onScroll={handleScroll}
+                    scrollEventThrottle={16}
+                    style={styles.carouselScroll}
+                  >
+                    {carouselItems.map((item, index) => (
+                      <TouchableOpacity
+                        key={item._id || index}
+                        activeOpacity={item.targetUrl ? 0.7 : 1}
+                        onPress={() =>
+                          item.targetUrl && Linking.openURL(item.targetUrl)
+                        }
+                        disabled={!item.targetUrl}
+                        style={styles.carouselItem}
+                      >
+                        <Image
+                          source={
+                            item.image ? { uri: IMAGE_URL + item.image } : item
+                          }
+                          style={styles.carouselImage}
+                          resizeMode="cover"
+                        />
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+
+                  <View style={styles.paginationContainer}>
+                    {carouselItems.map((_, i) => (
+                      <View
+                        key={i}
+                        style={[
+                          styles.paginationDot,
+                          currentIndex === i && styles.activePaginationDot,
+                        ]}
+                      />
+                    ))}
+                  </View>
+                </>
+              )}
+            </View>
           </View>
-        </View>
+        </ScrollView>
       </SafeAreaView>
     </LinearGradient>
   );
@@ -532,10 +579,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(233, 69, 96, 0.8)",
     borderTopColor: "transparent",
   },
-  nowPlayingContainer: {
-    alignItems: "center",
-    marginBottom: 4,
-  },
+  nowPlayingContainer: { alignItems: "center", marginBottom: 4 },
   titleBadge: {
     backgroundColor: "rgba(15, 23, 42, 0.85)",
     paddingHorizontal: 16,
@@ -549,11 +593,7 @@ const styles = StyleSheet.create({
     color: "#fff",
     textAlign: "center",
   },
-  artistName: {
-    fontSize: 15,
-    color: "#cbd5e1",
-    marginTop: 8,
-  },
+  artistName: { fontSize: 15, color: "#cbd5e1", marginTop: 8 },
   controlsSection: { alignItems: "center", gap: 15, marginBottom: 20 },
   liveContainer: {
     flexDirection: "row",
@@ -605,11 +645,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     overflow: "hidden",
   },
-  carouselImage: {
-    width: SCREEN_WIDTH - 40,
-    height: 125,
-    borderRadius: 16,
-  },
+  carouselImage: { width: SCREEN_WIDTH - 40, height: 125, borderRadius: 16 },
   paginationContainer: {
     flexDirection: "row",
     alignItems: "center",
