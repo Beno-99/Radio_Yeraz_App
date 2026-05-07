@@ -4,6 +4,7 @@ import PostCard from "@/components/PostCard";
 import { usePosts } from "@/hooks/usePosts";
 import { useNavigationStore } from "@/stores/navigationStore";
 import { LinearGradient } from "expo-linear-gradient";
+import { useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -20,6 +21,11 @@ export default function Posts() {
   const { targetPostId, setTargetPostId } = useNavigationStore();
   const [isScrolling, setIsScrolling] = useState(false);
   const isEmptyState = !loading && posts?.length === 0;
+
+  const params = useLocalSearchParams<{
+    returnPostId?: string;
+    returnVideoTime?: string;
+  }>();
 
   useEffect(() => {
     if (!targetPostId || posts.length === 0) return;
@@ -81,9 +87,20 @@ export default function Posts() {
         openMedia={openMedia}
         isScrolling={isScrolling}
         isRefreshing={refreshing}
+        returnVideoTime={
+          params.returnPostId === String(item._id)
+            ? Number(params.returnVideoTime || 0)
+            : 0
+        }
       />
     ),
-    [openMedia, isScrolling],
+    [
+      openMedia,
+      isScrolling,
+      refreshing,
+      params.returnPostId,
+      params.returnVideoTime,
+    ],
   );
 
   const keyExtractor = useCallback(
