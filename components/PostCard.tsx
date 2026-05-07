@@ -56,6 +56,7 @@ function PostCard({
   openMedia,
   isVisible = true,
   isScrolling = false,
+  returnVideoTime = 0,
 }: any) {
   const { width: screenWidth } = useWindowDimensions();
   const videoRef = useRef<VideoRef>(null);
@@ -68,7 +69,7 @@ function PostCard({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMuted, setIsMuted] = useState(Platform.OS === "web");
   const [durationMillis, setDurationMillis] = useState(0);
-  const [positionMillis, setPositionMillis] = useState(0);
+  const [positionMillis, setPositionMillis] = useState(returnVideoTime * 1000);
   const [progressTrackWidth, setProgressTrackWidth] = useState(0);
   const [fullscreenProgressTrackWidth, setFullscreenProgressTrackWidth] =
     useState(0);
@@ -133,6 +134,22 @@ function PostCard({
       }
     }
   }, [isScrolling, playing, isFullscreen]);
+
+  useEffect(() => {
+    return () => {
+      setPlaying(false);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (returnVideoTime > 0) {
+      setPositionMillis(returnVideoTime * 1000);
+
+      setTimeout(() => {
+        videoRef.current?.seek(returnVideoTime);
+      }, 300);
+    }
+  }, [returnVideoTime]);
 
   const toggleVideo = () => {
     if (!hasVideo) return;
@@ -454,9 +471,19 @@ function PostCard({
             onPress={() => {
               const realId = String(item?._id || item?.id || "");
               if (!realId || realId === "[id]") return;
+
+              const currentSeconds = Math.floor(positionMillis / 1000);
+
+              setPlaying(false);
+              setShowControls(true);
+
               router.push({
                 pathname: "/post/[id]",
-                params: { id: realId },
+                params: {
+                  id: realId,
+                  startAt: String(currentSeconds),
+                  autoplay: "true",
+                },
               } as any);
             }}
           >
