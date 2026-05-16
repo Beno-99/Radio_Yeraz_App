@@ -1,6 +1,5 @@
 import PageHeader from "@/components/PageHeader";
 import { IMAGE_URL, mobileApi } from "@/services/mobileApi";
-import { requestUserPermission } from "@/services/notificationPermissions.service";
 import { socketService } from "@/services/socket.service";
 import { Ionicons } from "@expo/vector-icons";
 import { getApp } from "@react-native-firebase/app";
@@ -8,10 +7,8 @@ import {
   AuthorizationStatus,
   getMessaging,
   getToken,
-  onMessage,
   requestPermission,
   setBackgroundMessageHandler,
-  subscribeToTopic,
 } from "@react-native-firebase/messaging";
 import {
   setAudioModeAsync,
@@ -45,17 +42,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-LogBox.ignoreLogs(["Unable to activate keep awake", "Uncaught (in promise"]);
+LogBox.ignoreLogs(["Unable to activate keep awake"]);
 
-// const STREAM_URL = "https://streaming05.liveboxstream.uk/proxy/radioye3/stream";
-const STREAM_URL =
-  process.env.EXPO_PUBLIC_STREAM_URL ||
-  "https://streaming05.liveboxstream.uk/proxy/radioye3/stream";
-const STREAM_METADATA_URL = process.env.EXPO_PUBLIC_STREAM_METADATA_URL || "";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const fallbackImage = require("@/assets/images/sublogo.png");
-const [nowPlaying, setNowPlaying] = useState("Loading...");
-const [trackTitle, setTrackTitle] = useState("LIVE STREAM");
 
 const app = getApp();
 const messaging = getMessaging(app);
@@ -64,27 +54,7 @@ setBackgroundMessageHandler(messaging, async (remoteMessage) => {
   console.log("Message handled in the background!", remoteMessage);
 });
 
-async function getDeviceToken() {
-  const authStatus = await requestPermission(messaging);
-  const enabled =
-    authStatus === AuthorizationStatus.AUTHORIZED ||
-    authStatus === AuthorizationStatus.PROVISIONAL;
-
-  if (enabled) {
-    const token = await getToken(messaging);
-    console.log("FCM Token:", token);
-    return token;
-  }
-
-  console.log("Permission denied");
-  return null;
-}
-
-async function subscribeToTopicHandler(topic: string) {
-  await subscribeToTopic(messaging, topic);
-  console.log("Subscribed to topic:", topic);
-}
-
+// ====================== AUDIO PLAYER COMPONENT ======================
 function AudioPlayerComponent({
   uri,
   nowPlaying,
@@ -109,7 +79,7 @@ function AudioPlayerComponent({
         title: nowPlaying || "LIVE STREAM",
         artist: "Radio Yeraz • Syria",
         albumTitle: "Radio Yeraz",
-        artworkUrl: "https://www.radioyeraz.com/radiojpg",
+        artworkUrl: "https://www.radioyeraz.com/radioLogo-300.jpg",
       });
     }
   }, [nowPlaying, status?.playing]);
@@ -117,17 +87,24 @@ function AudioPlayerComponent({
   return null;
 }
 
+// ====================== MAIN COMPONENT ======================
 export default function RadioPlayer() {
-  const [playerKey, setPlayerKey] = useState(0);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [autoPlayEnabled] = useState(true);
-  const [nowPlaying, setNowPlaying] = useState("Loading...");
+  const [streamLinks, setStreamLinks] = useState<any[]>([]);
+  const [STREAM_URL, setSTREAM_URL] = useState<string>(
+    "https://streaming05.liveboxstream.uk/proxy/radioye3/stream",
+  );
+  const [metadataUrl, setMetadataUrl] = useState<string>("");
+
   const [ads, setAds] = useState<any[]>([]);
   const [adsLoading, setAdsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [trackTitle, setTrackTitle] = useState("LIVE STREAM");
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [autoPlayEnabled] = useState(true);
 
   const scrollRef = useRef<ScrollView>(null);
-  const autoPlayTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoPlayTimerRef = useRef<number | null>(null);
+  const isFirstLaunch = useRef(true);
 
   const wave1 = useSharedValue(0);
   const wave2 = useSharedValue(0);
@@ -136,9 +113,50 @@ export default function RadioPlayer() {
 
   const player = useAudioPlayer({ uri: STREAM_URL });
   const status = useAudioPlayerStatus(player);
-
   const isPlaying = status?.playing ?? false;
   const isBuffering = status?.isBuffering ?? false;
+
+  // ================== NOTIFICATION PERMISSION ==================
+  const requestNotificationPermission = async () => {
+    try {
+      const authStatus = await requestPermission(messaging);
+      const enabled =
+        authStatus === AuthorizationStatus.AUTHORIZED ||
+        authStatus === AuthorizationStatus.PROVISIONAL;
+
+      if (enabled) {
+        const token = await getToken(messaging);
+        console.log("✅ FCM Token received:", token);
+      }
+    } catch (error) {
+      console.error("Permission request error:", error);
+    }
+  };
+
+  // ================== FETCH STREAM LINKS ==================
+  const fetchStreamLinks = async () => {
+    try {
+      const { data } = await mobileApi.get("/stream-links");
+      setStreamLinks(data);
+
+      const activeLink = data.find((link: any) => link.isActive === true);
+      const selectedStreamUrl = activeLink?.url || data[0]?.url;
+      if (selectedStreamUrl) {
+        setSTREAM_URL(selectedStreamUrl);
+        console.log("🎵 Using Stream URL:", selectedStreamUrl);
+      }
+
+      if (data?.length > 1) {
+        const metaItem = data[1];
+        const metaUrl =
+          metaItem?.metadataUrl || metaItem?.url || metaItem?.metaUrl || "";
+        setMetadataUrl(metaUrl);
+        console.log("📡 Metadata URL:", metaUrl);
+      }
+    } catch (error) {
+      console.error("Failed to fetch stream links:", error);
+    }
+  };
 
   const fetchAds = useCallback(async (silent = false) => {
     try {
@@ -147,50 +165,30 @@ export default function RadioPlayer() {
         params: { isActive: true },
       });
       setAds(data?.data ?? []);
-    } catch (err: any) {
+    } catch (err) {
       console.log("Ads fetch error:", err);
     } finally {
       setAdsLoading(false);
     }
   }, []);
 
+  // ================== INITIAL LOAD ==================
   useEffect(() => {
-    const setupNotifications = async () => {
-      try {
-        await getDeviceToken();
-        await subscribeToTopicHandler("all");
-        const hasPermission = await requestUserPermission();
-        if (hasPermission) {
-          await getToken(messaging);
-          const unsubscribe = onMessage(messaging, async (remoteMessage) => {
-            console.log("A new FCM message arrived!", remoteMessage);
-          });
-          return unsubscribe;
-        }
-      } catch (error) {
-        console.error("FCM Setup Error:", error);
-      }
-      return undefined;
-    };
+    if (isFirstLaunch.current) {
+      isFirstLaunch.current = false;
+      requestNotificationPermission();
+    }
 
-    let unsubscribeForeground: undefined | (() => void);
-
-    setupNotifications().then((unsubscribe) => {
-      unsubscribeForeground = unsubscribe;
-    });
-
-    return () => {
-      if (unsubscribeForeground) unsubscribeForeground();
-    };
-  }, []);
-
-  useEffect(() => {
+    fetchStreamLinks();
     fetchAds();
 
     const appStateSub = AppState.addEventListener(
       "change",
       (state: AppStateStatus) => {
-        if (state === "active") fetchAds(true);
+        if (state === "active") {
+          fetchStreamLinks();
+          fetchAds(true);
+        }
       },
     );
 
@@ -212,39 +210,35 @@ export default function RadioPlayer() {
     };
   }, [fetchAds]);
 
+  // ================== METADATA ==================
   useEffect(() => {
     let mounted = true;
-    let interval: ReturnType<typeof setInterval> | null = null;
+    let interval: number | null = null;
 
     const fetchNowPlaying = async () => {
-      if (!STREAM_METADATA_URL) return;
-
+      if (!metadataUrl) return;
       try {
-        const response = await fetch(STREAM_METADATA_URL);
-        const data = await response.json();
-
+        const res = await fetch(metadataUrl);
+        const data = await res.json();
         const source = data?.icestats?.source;
         const stream = Array.isArray(source) ? source[0] : source;
-
-        const title =
-          stream?.title || stream?.song || stream?.server_name || "LIVE STREAM";
-
+        const title = stream?.title || stream?.song || "LIVE STREAM";
         if (mounted) setTrackTitle(title);
-      } catch (error) {
-        console.log("Metadata error:", error);
+      } catch {
         if (mounted) setTrackTitle("LIVE STREAM");
       }
     };
 
     fetchNowPlaying();
-    interval = setInterval(fetchNowPlaying, 60000);
+    interval = setInterval(fetchNowPlaying, 45000);
 
     return () => {
       mounted = false;
       if (interval) clearInterval(interval);
     };
-  }, []);
+  }, [metadataUrl]);
 
+  // ================== ANIMATIONS ==================
   useEffect(() => {
     if (isPlaying) {
       wave1.value = withRepeat(withTiming(1, { duration: 2000 }), -1);
@@ -275,14 +269,11 @@ export default function RadioPlayer() {
     }
   }, [isBuffering]);
 
+  // ================== CAROUSEL ==================
   useEffect(() => {
+    if (autoPlayTimerRef.current) clearInterval(autoPlayTimerRef.current);
+
     const items = ads.length > 0 ? ads : [fallbackImage];
-
-    if (autoPlayTimerRef.current) {
-      clearInterval(autoPlayTimerRef.current);
-      autoPlayTimerRef.current = null;
-    }
-
     if (items.length <= 1 || !autoPlayEnabled) return;
 
     autoPlayTimerRef.current = setInterval(() => {
@@ -294,7 +285,7 @@ export default function RadioPlayer() {
         });
         return nextIndex;
       });
-    }, 4000);
+    }, 4500);
 
     return () => {
       if (autoPlayTimerRef.current) {
@@ -302,7 +293,22 @@ export default function RadioPlayer() {
         autoPlayTimerRef.current = null;
       }
     };
-  }, [autoPlayEnabled, ads]);
+  }, [ads, autoPlayEnabled]);
+
+  // ================== SAFER CLEANUP ==================
+  useEffect(() => {
+    return () => {
+      if (autoPlayTimerRef.current) {
+        clearInterval(autoPlayTimerRef.current);
+      }
+      // Safer way to pause
+      try {
+        player.pause();
+      } catch (e) {
+        // Ignore if player is already released
+      }
+    };
+  }, [player]);
 
   const handleScroll = (event: any) => {
     const newIndex = Math.round(
@@ -313,26 +319,30 @@ export default function RadioPlayer() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([fetchAds(false)]);
-    setPlayerKey((prev) => prev + 1);
+    await Promise.all([fetchAds(false), fetchStreamLinks()]);
     setRefreshing(false);
   }, [fetchAds]);
 
   const togglePlayback = () => {
-    if (isPlaying || player.playing) {
-      player.pause();
-      player.setActiveForLockScreen(false);
-    } else {
-      player.setActiveForLockScreen(true, {
-        title: nowPlaying || "LIVE STREAM",
-        artist: "Radio Yeraz • Syria",
-        albumTitle: "Radio Yeraz",
-        artworkUrl: "https://www.radioyeraz.com/radioLogo-300.jpg",
-      });
-      player.play();
+    try {
+      if (isPlaying) {
+        player.pause();
+        player.setActiveForLockScreen(false);
+      } else {
+        player.setActiveForLockScreen(true, {
+          title: trackTitle || "LIVE STREAM",
+          artist: "Radio Yeraz • Syria",
+          albumTitle: "Radio Yeraz",
+          artworkUrl: "https://www.radioyeraz.com/radioLogo-300.jpg",
+        });
+        player.play();
+      }
+    } catch (e) {
+      console.warn("Player action failed", e);
     }
   };
 
+  // Animated Styles
   const animatedWave1 = useAnimatedStyle(() => ({
     transform: [{ scale: 1 + wave1.value * 0.6 }],
     opacity: 0.7 - wave1.value * 0.7,
@@ -362,9 +372,9 @@ export default function RadioPlayer() {
       <PageHeader />
 
       <AudioPlayerComponent
-        key={playerKey}
+        key={STREAM_URL}
         uri={STREAM_URL}
-        nowPlaying={nowPlaying}
+        nowPlaying={trackTitle}
       />
 
       <SafeAreaView
@@ -386,6 +396,7 @@ export default function RadioPlayer() {
           }
         >
           <View style={styles.content}>
+            {/* Header, Logo, Controls, Carousel - Same as before */}
             <View style={styles.headerSection}>
               <Text style={styles.header}>RADIO YERAZ</Text>
               <Text style={styles.subHeader}>Հայկական երաժշտութիուն 24/7</Text>
@@ -401,11 +412,9 @@ export default function RadioPlayer() {
               <Animated.View
                 style={[styles.wave, styles.wave3, animatedWave3]}
               />
-
-              {isBuffering ? (
+              {isBuffering && (
                 <Animated.View style={[styles.spinnerRing, animatedSpinner]} />
-              ) : null}
-
+              )}
               <Image
                 source={require("@/assets/images/radioLogo.jpg")}
                 style={styles.logo}
@@ -526,7 +535,9 @@ export default function RadioPlayer() {
   );
 }
 
+// ====================== STYLES ======================
 const styles = StyleSheet.create({
+  // Paste all your styles here (same as previous version)
   gradient: { flex: 1 },
   container: { flex: 1 },
   content: {
