@@ -493,25 +493,44 @@ export default function RadioPlayer() {
                     scrollEventThrottle={16}
                     style={styles.carouselScroll}
                   >
-                    {carouselItems.map((item, index) => (
-                      <TouchableOpacity
-                        key={item._id || index}
-                        activeOpacity={item.targetUrl ? 0.7 : 1}
-                        onPress={() =>
-                          item.targetUrl && Linking.openURL(item.targetUrl)
-                        }
-                        disabled={!item.targetUrl}
-                        style={styles.carouselItem}
-                      >
-                        <Image
-                          source={
-                            item.image ? { uri: IMAGE_URL + item.image } : item
-                          }
-                          style={styles.carouselImage}
-                          resizeMode="cover"
-                        />
-                      </TouchableOpacity>
-                    ))}
+                    {carouselItems.map((item, index) => {
+                      const hasLink = !!item?.targetUrl?.trim(); // Best check: not empty and not just spaces
+
+                      return (
+                        <TouchableOpacity
+                          key={item._id || index}
+                          activeOpacity={hasLink ? 0.7 : 1}
+                          onPress={() => {
+                            if (hasLink) {
+                              Linking.openURL(item.targetUrl);
+                            }
+                          }}
+                          disabled={!hasLink}
+                          style={styles.carouselItem}
+                        >
+                          <Image
+                            source={
+                              item.image
+                                ? { uri: IMAGE_URL + item.image }
+                                : item
+                            }
+                            style={styles.carouselImage}
+                            resizeMode="cover"
+                          />
+
+                          {/* Optional visual hint - shows only when clickable */}
+                          {hasLink && (
+                            <View style={styles.linkBadge}>
+                              <Ionicons
+                                name="link-outline"
+                                size={16}
+                                color="#fff"
+                              />
+                            </View>
+                          )}
+                        </TouchableOpacity>
+                      );
+                    })}
                   </ScrollView>
 
                   <View style={styles.paginationContainer}>
@@ -681,5 +700,14 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: 999,
     backgroundColor: "#e94560",
+  },
+  linkBadge: {
+    position: "absolute",
+    bottom: 12,
+    right: 12,
+    backgroundColor: "rgba(233, 69, 96, 0.9)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
 });
