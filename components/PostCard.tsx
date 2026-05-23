@@ -1,9 +1,11 @@
 import ZoomableImage from "@/components/ZoomableImage";
 import { IMAGE_URL } from "@/services/mobileApi";
+import { useVideoProgress } from "@/stores/videoProgressStore";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { memo, useEffect, useRef, useState } from "react";
 import {
+  ActivityIndicator,
   GestureResponderEvent,
   Image,
   Linking,
@@ -18,7 +20,11 @@ import {
   View,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Video, { VideoRef } from "react-native-video";
+import Video, {
+  OnLoadData,
+  OnProgressData,
+  VideoRef,
+} from "react-native-video";
 
 const MOBILE_MEDIA_ASPECT_RATIO = 4 / 3;
 const DESKTOP_MEDIA_ASPECT_RATIO = 16 / 9;
@@ -56,12 +62,14 @@ function PostCard({
   openMedia,
   isVisible = true,
   isScrolling = false,
-  returnVideoTime = 0,
 }: any) {
   const { width: screenWidth } = useWindowDimensions();
   const videoRef = useRef<VideoRef>(null);
-  // Separate ref for the fullscreen video instance
-  const fullscreenVideoRef = useRef<VideoRef>(null);
+  const controlsTimeoutRef = useRef<number | null>(null);
+  const loadTimeoutRef = useRef<number | null>(null);
+
+  const { getProgress, setProgress } = useVideoProgress();
+  const postId = String(item?._id || item?.id || "");
 
   const [playing, setPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
@@ -69,10 +77,16 @@ function PostCard({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMuted, setIsMuted] = useState(Platform.OS === "web");
   const [durationMillis, setDurationMillis] = useState(0);
-  const [positionMillis, setPositionMillis] = useState(returnVideoTime * 1000);
+  const [positionMillis, setPositionMillis] = useState(0);
   const [progressTrackWidth, setProgressTrackWidth] = useState(0);
-  const [fullscreenProgressTrackWidth, setFullscreenProgressTrackWidth] =
-    useState(0);
+  const [bufferedPercent, setBufferedPercent] = useState(0);
+
+  // Video loading states
+  const [videoLoading, setVideoLoading] = useState(true);
+  const [videoError, setVideoError] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+
   const router = useRouter();
 
   const hasVideo = item?.video && item.video.trim() !== "";
@@ -124,6 +138,52 @@ function PostCard({
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
+  // Auto-hide controls after 3 seconds when playing
+  const scheduleHideControls = () => {
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+    controlsTimeoutRef.current = setTimeout(() => {
+      if (playing && !isBuffering) {
+        setShowControls(false);
+      }
+    }, 3000);
+  };
+
+  // Load saved progress on mount
+  useEffect(() => {
+    if (postId && hasVideo) {
+      const savedProgress = getProgress(postId);
+      if (savedProgress > 0) {
+        setPositionMillis(savedProgress * 1000);
+      }
+    }
+  }, [postId, hasVideo, getProgress]);
+
+  // Seek to saved position after video is ready
+  useEffect(() => {
+    if (videoReady && postId && hasVideo) {
+      const savedProgress = getProgress(postId);
+      if (savedProgress > 0) {
+        const seekTimeout = setTimeout(() => {
+          videoRef.current?.seek(savedProgress);
+        }, 300);
+        return () => clearTimeout(seekTimeout);
+      }
+    }
+  }, [videoReady, postId, hasVideo, getProgress]);
+
+  // Save progress when position changes
+  useEffect(() => {
+    if (postId && hasVideo && positionMillis > 0 && durationMillis > 0) {
+      const debounce = setTimeout(() => {
+        setProgress(postId, Math.floor(positionMillis / 1000));
+      }, 1000);
+      return () => clearTimeout(debounce);
+    }
+  }, [postId, hasVideo, positionMillis, durationMillis, setProgress]);
+
+  // Pause when scrolling
   useEffect(() => {
     if (isScrolling && playing) {
       setPlaying(false);
@@ -135,96 +195,184 @@ function PostCard({
     }
   }, [isScrolling, playing, isFullscreen]);
 
+  // Cleanup on unmount
   useEffect(() => {
     return () => {
       setPlaying(false);
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+      }
     };
   }, []);
 
+  // Video load timeout protection (15 seconds)
   useEffect(() => {
-    if (returnVideoTime > 0) {
-      setPositionMillis(returnVideoTime * 1000);
+    if (hasVideo && videoLoading) {
+      loadTimeoutRef.current = setTimeout(() => {
+        if (videoLoading) {
+          console.warn("Video load timeout for:", videoUri);
+          setVideoLoading(false);
+          setVideoError(true);
+        }
+      }, 15000);
 
-      setTimeout(() => {
-        videoRef.current?.seek(returnVideoTime);
-      }, 300);
+      return () => {
+        if (loadTimeoutRef.current) {
+          clearTimeout(loadTimeoutRef.current);
+        }
+      };
     }
-  }, [returnVideoTime]);
+  }, [hasVideo, videoLoading, videoUri]);
 
   const toggleVideo = () => {
-    if (!hasVideo) return;
-    if (playing) {
-      setPlaying(false);
-      setShowControls(true);
+    if (!hasVideo || !videoReady) return;
+    const newPlayingState = !playing;
+    setPlaying(newPlayingState);
+
+    if (newPlayingState) {
+      scheduleHideControls();
     } else {
-      setPlaying(true);
-      setShowControls(false);
+      setShowControls(true);
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
     }
   };
 
-  const toggleMute = () => setIsMuted((prev) => !prev);
+  const toggleMute = () => {
+    setIsMuted((prev) => !prev);
+    setShowControls(true);
+    scheduleHideControls();
+  };
 
   const openFullscreen = () => {
-    // Pause the card video before switching — fullscreen video will resume
-    setPlaying(false);
+    if (!videoReady) return;
     setIsFullscreen(true);
     StatusBar.setHidden(true);
     setShowControls(true);
+    scheduleHideControls();
   };
 
   const closeFullscreen = () => {
-    // Pause fullscreen video, card video will resume from saved positionMillis
-    setPlaying(false);
     setIsFullscreen(false);
     StatusBar.setHidden(false);
     setShowControls(true);
-    // Resume card video at the saved position
-    setTimeout(() => {
-      videoRef.current?.seek(positionMillis / 1000);
-    }, 100);
   };
 
   const skipBy = (seconds: number) => {
-    if (!hasVideo || durationMillis <= 0) return;
+    if (!hasVideo || durationMillis <= 0 || !videoReady) return;
     const nextMs = Math.max(
       0,
       Math.min(durationMillis, positionMillis + seconds * 1000),
     );
-    if (isFullscreen) {
-      fullscreenVideoRef.current?.seek(nextMs / 1000);
-    } else {
-      videoRef.current?.seek(nextMs / 1000);
-    }
+    videoRef.current?.seek(nextMs / 1000);
     setPositionMillis(nextMs);
+    setShowControls(true);
+    scheduleHideControls();
   };
 
   const handleSeekPress = (
     event: GestureResponderEvent,
     trackWidth: number,
   ) => {
-    if (!hasVideo || durationMillis <= 0 || trackWidth <= 0) return;
+    if (!hasVideo || durationMillis <= 0 || trackWidth <= 0 || !videoReady)
+      return;
     const locationX = Number(event?.nativeEvent?.locationX);
     if (!Number.isFinite(locationX)) return;
     const ratio = Math.max(0, Math.min(1, locationX / trackWidth));
     const nextMs = durationMillis * ratio;
-    if (isFullscreen) {
-      fullscreenVideoRef.current?.seek(nextMs / 1000);
-    } else {
-      videoRef.current?.seek(nextMs / 1000);
-    }
+    videoRef.current?.seek(nextMs / 1000);
     setPositionMillis(nextMs);
+    setShowControls(true);
+    scheduleHideControls();
   };
 
-  const renderVideoControls = (isFS: boolean) => (
-    <>
-      <View style={styles.controlsOverlayBg} pointerEvents="none" />
-      <Pressable
-        style={styles.controlsDismissLayer}
-        onPress={() => setShowControls(false)}
-      />
+  const handleVideoTap = () => {
+    if (!videoReady) return;
 
+    if (showControls) {
+      if (playing && !isBuffering) {
+        setShowControls(false);
+      }
+    } else {
+      setShowControls(true);
+      scheduleHideControls();
+    }
+  };
+
+  const handleVideoLoad = (data: OnLoadData) => {
+    const duration = toSafeMs(data.duration * 1000);
+    setDurationMillis(duration);
+    setVideoLoading(false);
+    setVideoReady(true);
+    setVideoError(false);
+
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+    }
+  };
+
+  const handleVideoProgress = (data: OnProgressData) => {
+    const current = toSafeMs(data.currentTime * 1000);
+
+    setPositionMillis(current);
+    setIsBuffering(false);
+
+    if (durationMillis > 0 && data.playableDuration) {
+      const buffered = ((data.playableDuration * 1000) / durationMillis) * 100;
+
+      setBufferedPercent(Math.min(buffered, 100));
+    }
+  };
+
+  const handleVideoBuffer = ({ isBuffering }: { isBuffering: boolean }) => {
+    setIsBuffering(isBuffering);
+    if (isBuffering) {
+      setShowControls(true);
+    }
+  };
+
+  const handleVideoError = (error: any) => {
+    console.error("Video error:", error);
+    setVideoError(true);
+    setVideoLoading(false);
+    setVideoReady(false);
+    setPlaying(false);
+  };
+
+  const handleVideoEnd = () => {
+    setPlaying(false);
+    setShowControls(true);
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+  };
+
+  const retryVideoLoad = () => {
+    setVideoError(false);
+    setVideoLoading(true);
+    setVideoReady(false);
+    setPositionMillis(0);
+    setDurationMillis(0);
+  };
+
+  const renderVideoControls = () => (
+    <Pressable style={StyleSheet.absoluteFill} onPress={handleVideoTap}>
+      {/* Semi-transparent overlay */}
+      <View style={styles.controlsOverlayBg} pointerEvents="none" />
+
+      {/* Top controls */}
       <View style={styles.topControls} pointerEvents="box-none">
-        <Pressable style={styles.iconButton} onPress={toggleMute}>
+        <Pressable
+          style={styles.iconButton}
+          onPress={(e) => {
+            e.stopPropagation();
+            toggleMute();
+          }}
+        >
           <Ionicons
             name={isMuted ? "volume-mute" : "volume-high"}
             size={20}
@@ -233,16 +381,25 @@ function PostCard({
         </Pressable>
         <Pressable
           style={styles.iconButton}
-          onPress={isFS ? closeFullscreen : openFullscreen}
+          onPress={(e) => {
+            e.stopPropagation();
+
+            if (isFullscreen) {
+              closeFullscreen();
+            } else {
+              openFullscreen();
+            }
+          }}
         >
           <Ionicons
-            name={isFS ? "contract" : "expand"}
+            name={isFullscreen ? "contract" : "expand"}
             size={20}
             color="#fff"
           />
         </Pressable>
       </View>
 
+      {/* Center playback controls */}
       <View style={styles.centerControls} pointerEvents="box-none">
         <Pressable
           style={[
@@ -253,7 +410,10 @@ function PostCard({
               borderRadius: controlButtonSize / 2,
             },
           ]}
-          onPress={() => skipBy(-10)}
+          onPress={(e) => {
+            e.stopPropagation();
+            skipBy(-10);
+          }}
         >
           <Ionicons name="play-back" size={20} color="#fff" />
         </Pressable>
@@ -267,7 +427,10 @@ function PostCard({
               borderRadius: mainControlButtonSize / 2,
             },
           ]}
-          onPress={toggleVideo}
+          onPress={(e) => {
+            e.stopPropagation();
+            toggleVideo();
+          }}
         >
           <Ionicons name={playing ? "pause" : "play"} size={28} color="#fff" />
         </Pressable>
@@ -281,31 +444,37 @@ function PostCard({
               borderRadius: controlButtonSize / 2,
             },
           ]}
-          onPress={() => skipBy(10)}
+          onPress={(e) => {
+            e.stopPropagation();
+            skipBy(10);
+          }}
         >
           <Ionicons name="play-forward" size={20} color="#fff" />
         </Pressable>
       </View>
 
-      <View style={styles.bottomControls} pointerEvents="box-none">
+      {/* Bottom progress bar and time */}
+      <View style={styles.bottomControls}>
         <Pressable
           style={styles.progressTrackHitArea}
-          onLayout={(e) =>
-            isFS
-              ? setFullscreenProgressTrackWidth(e.nativeEvent.layout.width)
-              : setProgressTrackWidth(e.nativeEvent.layout.width)
-          }
-          onPress={(e) =>
-            handleSeekPress(
-              e,
-              isFS ? fullscreenProgressTrackWidth : progressTrackWidth,
-            )
-          }
+          onLayout={(e) => setProgressTrackWidth(e.nativeEvent.layout.width)}
+          onPress={(e) => handleSeekPress(e, progressTrackWidth)}
         >
           <View style={styles.progressTrack}>
+            {/* Buffered gray line */}
+            <View
+              style={[
+                styles.progressBuffered,
+                { width: `${bufferedPercent}%` },
+              ]}
+            />
+
+            {/* Played red line */}
             <View
               style={[styles.progressFill, { width: `${progressPercent}%` }]}
             />
+
+            {/* Thumb */}
             <View
               style={[styles.progressThumb, { left: `${progressPercent}%` }]}
             />
@@ -315,70 +484,7 @@ function PostCard({
           {formatMs(positionMillis)} / {formatMs(durationMillis)}
         </Text>
       </View>
-    </>
-  );
-
-  // ─── Card Video (always rendered, hidden when fullscreen is open) ───────────
-  const cardVideoElement = (
-    <Video
-      ref={videoRef}
-      source={{ uri: videoUri }}
-      style={StyleSheet.absoluteFill}
-      // FIX 1: "contain" respects 4:3 aspect ratio without cropping
-      resizeMode="contain"
-      paused={!playing || isFullscreen}
-      muted={isMuted}
-      repeat
-      controls={false}
-      playInBackground={false}
-      playWhenInactive={false}
-      ignoreSilentSwitch="ignore"
-      onLoad={({ duration }) => {
-        setDurationMillis(toSafeMs(duration * 1000));
-      }}
-      onProgress={({ currentTime }) => {
-        if (!isFullscreen) {
-          setPositionMillis(toSafeMs(currentTime * 1000));
-        }
-      }}
-      onEnd={() => {
-        setPlaying(false);
-        setShowControls(true);
-      }}
-    />
-  );
-
-  // ─── Fullscreen Video (separate instance that seeks to saved position) ──────
-  const fullscreenVideoElement = (
-    <Video
-      ref={fullscreenVideoRef}
-      source={{ uri: videoUri }}
-      style={StyleSheet.absoluteFill}
-      resizeMode="contain"
-      // FIX 2: auto-plays when fullscreen opens, sharing the same playing state
-      paused={!playing}
-      muted={isMuted}
-      repeat
-      controls={false}
-      playInBackground={false}
-      playWhenInactive={false}
-      ignoreSilentSwitch="ignore"
-      onLoad={({ duration }) => {
-        setDurationMillis(toSafeMs(duration * 1000));
-        // FIX 2: Seek to where the card video was, then resume playback
-        const seekTo = positionMillis / 1000;
-        fullscreenVideoRef.current?.seek(seekTo);
-        setPlaying(true);
-        setShowControls(false);
-      }}
-      onProgress={({ currentTime }) => {
-        setPositionMillis(toSafeMs(currentTime * 1000));
-      }}
-      onEnd={() => {
-        setPlaying(false);
-        setShowControls(true);
-      }}
-    />
+    </Pressable>
   );
 
   return (
@@ -390,6 +496,7 @@ function PostCard({
           isCompact && styles.cardCompact,
         ]}
       >
+        {/* Profile Header */}
         <View style={[styles.profileHeader, { padding: headerPadding }]}>
           <Image
             source={require("@/assets/images/radioLogo.jpg")}
@@ -414,6 +521,7 @@ function PostCard({
           </View>
         </View>
 
+        {/* Media Container */}
         {(hasVideo || hasImage) && (
           <View
             style={[
@@ -423,28 +531,84 @@ function PostCard({
           >
             {hasVideo ? (
               <>
-                {cardVideoElement}
-
-                {!showControls && (
-                  <Pressable
-                    style={styles.showControlsLayer}
-                    onPress={() => setShowControls(true)}
+                {videoUri && !videoError && (
+                  <Video
+                    ref={videoRef}
+                    source={{ uri: videoUri }}
+                    style={StyleSheet.absoluteFill}
+                    resizeMode="contain"
+                    paused={!playing}
+                    muted={isMuted}
+                    repeat
+                    controls={false}
+                    playInBackground={false}
+                    playWhenInactive={false}
+                    ignoreSilentSwitch="ignore"
+                    onLoad={handleVideoLoad}
+                    onProgress={handleVideoProgress}
+                    onBuffer={handleVideoBuffer}
+                    onError={handleVideoError}
+                    onEnd={handleVideoEnd}
+                    posterResizeMode="contain"
                   />
                 )}
 
-                {!showControls && (
+                {/* Loading spinner */}
+                {(videoLoading || isBuffering) && !videoError && (
+                  <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#ef4444" />
+                    <Text style={styles.loadingText}>
+                      {videoLoading ? "Loading video..." : "Buffering..."}
+                    </Text>
+                  </View>
+                )}
+
+                {/* Error state */}
+                {videoError && (
+                  <View style={styles.errorContainer}>
+                    <Ionicons
+                      name="alert-circle-outline"
+                      size={48}
+                      color="#ef4444"
+                    />
+                    <Text style={styles.errorText}>Failed to load video</Text>
+                    <Pressable
+                      style={styles.retryButton}
+                      onPress={retryVideoLoad}
+                    >
+                      <Text style={styles.retryText}>Retry</Text>
+                    </Pressable>
+                  </View>
+                )}
+
+                {/* Tap layer to show/hide controls */}
+                {!videoLoading &&
+                  !videoError &&
+                  videoReady &&
+                  !showControls && (
+                    <Pressable
+                      style={styles.videoTapLayer}
+                      onPress={handleVideoTap}
+                    />
+                  )}
+                {/* Minimal badge when controls are hidden */}
+                {!showControls && playing && !isBuffering && videoReady && (
                   <View style={styles.topRightBadges}>
-                    <Pressable style={styles.iconBadge} onPress={toggleMute}>
+                    <View style={styles.iconBadge}>
                       <Ionicons
                         name={isMuted ? "volume-mute" : "volume-high"}
                         size={16}
                         color="#fff"
                       />
-                    </Pressable>
+                    </View>
                   </View>
                 )}
 
-                {showControls && renderVideoControls(false)}
+                {/* Full controls overlay */}
+                {showControls &&
+                  videoReady &&
+                  !videoError &&
+                  renderVideoControls()}
               </>
             ) : (
               <TouchableOpacity
@@ -465,24 +629,22 @@ function PostCard({
           </View>
         )}
 
+        {/* Card Content */}
         <View style={[styles.cardContent, { padding: contentPadding }]}>
           <TouchableOpacity
             activeOpacity={0.75}
             onPress={() => {
-              const realId = String(item?._id || item?.id || "");
-              if (!realId || realId === "[id]") return;
-
+              if (!postId || postId === "[id]") return;
               const currentSeconds = Math.floor(positionMillis / 1000);
-
               setPlaying(false);
               setShowControls(true);
 
               router.push({
                 pathname: "/post/[id]",
                 params: {
-                  id: realId,
+                  id: postId,
                   startAt: String(currentSeconds),
-                  autoplay: "true",
+                  autoplay: "false",
                 },
               } as any);
             }}
@@ -532,7 +694,7 @@ function PostCard({
           )}
         </View>
 
-        {/* ── Fullscreen Video Modal ─────────────────────────────────── */}
+        {/* Fullscreen Video Modal */}
         <Modal
           visible={isFullscreen}
           transparent={false}
@@ -541,20 +703,49 @@ function PostCard({
           onRequestClose={closeFullscreen}
         >
           <View style={styles.fullscreenContainer}>
-            {fullscreenVideoElement}
-
-            {!showControls && (
-              <Pressable
-                style={styles.showControlsLayer}
-                onPress={() => setShowControls(true)}
+            {videoUri && !videoError && (
+              <Video
+                ref={videoRef}
+                source={{ uri: videoUri }}
+                style={StyleSheet.absoluteFill}
+                resizeMode="contain"
+                paused={!playing}
+                muted={isMuted}
+                repeat
+                controls={false}
+                playInBackground={false}
+                playWhenInactive={false}
+                ignoreSilentSwitch="ignore"
+                onLoad={handleVideoLoad}
+                onProgress={handleVideoProgress}
+                onBuffer={handleVideoBuffer}
+                onError={handleVideoError}
+                onEnd={handleVideoEnd}
               />
             )}
 
-            {showControls && renderVideoControls(true)}
+            {/* Loading/buffering in fullscreen */}
+            {isBuffering && !videoError && (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#ef4444" />
+              </View>
+            )}
+
+            {/* Tap layer */}
+            {/* Tap layer */}
+            {videoReady && !videoError && !showControls && (
+              <Pressable
+                style={styles.videoTapLayer}
+                onPress={handleVideoTap}
+              />
+            )}
+
+            {/* Controls */}
+            {showControls && videoReady && !videoError && renderVideoControls()}
           </View>
         </Modal>
 
-        {/* ── Image Viewer Modal ────────────────────────────────────── */}
+        {/* Image Viewer Modal */}
         <Modal
           visible={isImageViewerVisible}
           transparent
@@ -641,31 +832,67 @@ const styles = StyleSheet.create({
     height: "100%",
     backgroundColor: "#000",
   },
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.7)",
+    zIndex: 20,
+  },
+  loadingText: {
+    color: "#fff",
+    marginTop: 12,
+    fontSize: 14,
+  },
+  errorContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.8)",
+    padding: 20,
+    zIndex: 20,
+  },
+  errorText: {
+    color: "#fff",
+    fontSize: 16,
+    marginTop: 12,
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  retryButton: {
+    backgroundColor: "#ef4444",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  videoTapLayer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 5,
+  },
   topRightBadges: {
     position: "absolute",
     top: 8,
     right: 8,
     flexDirection: "row",
     gap: 6,
-    zIndex: 12,
+    zIndex: 15,
+    pointerEvents: "none",
   },
   iconBadge: {
     backgroundColor: "rgba(0,0,0,0.55)",
     borderRadius: 20,
     padding: 6,
   },
-  showControlsLayer: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 5,
-  },
   controlsOverlayBg: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.35)",
-    zIndex: 3,
-  },
-  controlsDismissLayer: {
-    ...StyleSheet.absoluteFillObject,
-    zIndex: 4,
+    zIndex: 6,
+    pointerEvents: "none",
   },
   topControls: {
     position: "absolute",
@@ -778,17 +1005,6 @@ const styles = StyleSheet.create({
     zIndex: 20,
     padding: 6,
   },
-  viewerImageWrap: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 12,
-  },
-  viewerImage: {
-    width: "100%",
-    height: "80%",
-  },
   cardFooter: {
     flexDirection: "row",
     alignItems: "center",
@@ -807,5 +1023,13 @@ const styles = StyleSheet.create({
   footerText: {
     fontSize: 12,
     color: "#9ca3af",
+  },
+  progressBuffered: {
+    position: "absolute",
+    left: 0,
+    top: 0,
+    bottom: 0,
+    backgroundColor: "rgba(255,255,255,0.45)",
+    borderRadius: 999,
   },
 });
