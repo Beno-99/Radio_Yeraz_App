@@ -1,4 +1,5 @@
 import ZoomableImage from "@/components/ZoomableImage";
+import { useVideoProgress } from "@/stores/videoProgressStore";
 import { Ionicons } from "@expo/vector-icons";
 import axios from "axios";
 import { LinearGradient } from "expo-linear-gradient";
@@ -20,7 +21,11 @@ import {
   View,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Video, { VideoRef } from "react-native-video";
+import Video, {
+  OnLoadData,
+  OnProgressData,
+  VideoRef,
+} from "react-native-video";
 
 const { width } = Dimensions.get("window");
 
@@ -65,6 +70,12 @@ const formatDate = (value?: { $date?: string } | string) => {
   });
 };
 
+const toSafeMs = (value: unknown) => {
+  if (typeof value !== "number" || !Number.isFinite(value) || value < 0)
+    return 0;
+  return value;
+};
+
 export default function PostDetail() {
   const router = useRouter();
 
@@ -75,25 +86,34 @@ export default function PostDetail() {
   }>();
 
   const id = Array.isArray(params.id) ? params.id[0] : params.id;
-
   const startAt = Number(params.startAt || 0);
   const shouldAutoplay = params.autoplay === "true";
+
+  const { getProgress, setProgress } = useVideoProgress();
 
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [playing, setPlaying] = useState(shouldAutoplay);
+  const [playing, setPlaying] = useState(false);
   const [showControls, setShowControls] = useState(true);
   const [isMuted, setIsMuted] = useState(Platform.OS === "web");
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
 
   const [durationMillis, setDurationMillis] = useState(0);
-  const [positionMillis, setPositionMillis] = useState(startAt * 1000);
+  const [positionMillis, setPositionMillis] = useState(0);
+  const [bufferedMillis, setBufferedMillis] = useState(0);
   const [progressTrackWidth, setProgressTrackWidth] = useState(0);
 
+  const [videoLoading, setVideoLoading] = useState(true);
+  const [videoError, setVideoError] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+  const [isBuffering, setIsBuffering] = useState(false);
+
   const videoRef = useRef<VideoRef>(null);
+  const controlsTimeoutRef = useRef<number | null>(null);
+  const loadTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     const fetchPost = async () => {
@@ -115,7 +135,6 @@ export default function PostDetail() {
         setError(
           err?.response?.data?.message || err?.message || "Failed to load post",
         );
-
         setPost(null);
       } finally {
         setLoading(false);
@@ -125,19 +144,38 @@ export default function PostDetail() {
     fetchPost();
   }, [id]);
 
+  useEffect(() => {
+    if (post?.video && videoLoading) {
+      loadTimeoutRef.current = setTimeout(() => {
+        if (videoLoading) {
+          setVideoLoading(false);
+          setVideoError(true);
+        }
+      }, 15000);
+
+      return () => {
+        if (loadTimeoutRef.current) {
+          clearTimeout(loadTimeoutRef.current);
+        }
+      };
+    }
+  }, [post?.video, videoLoading]);
+
+  useEffect(() => {
+    if (id && post?.video && positionMillis > 0 && durationMillis > 0) {
+      const debounce = setTimeout(() => {
+        setProgress(id, Math.floor(positionMillis / 1000));
+      }, 1000);
+
+      return () => clearTimeout(debounce);
+    }
+  }, [id, post?.video, positionMillis, durationMillis]);
+
   const imageUri = buildImageUrl(post?.mainImage);
   const videoUri = buildImageUrl(post?.video);
 
-  const toSafeMs = (value: unknown) => {
-    if (typeof value !== "number" || !Number.isFinite(value) || value < 0)
-      return 0;
-
-    return value;
-  };
-
   const formatMs = (ms: number) => {
     const totalSeconds = Math.floor(ms / 1000);
-
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
 
@@ -149,7 +187,46 @@ export default function PostDetail() {
       ? Math.min(100, Math.max(0, (positionMillis / durationMillis) * 100))
       : 0;
 
+  const bufferedPercent =
+    durationMillis > 0
+      ? Math.min(100, Math.max(0, (bufferedMillis / durationMillis) * 100))
+      : 0;
+
+  const scheduleHideControls = () => {
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+
+    controlsTimeoutRef.current = setTimeout(() => {
+      if (playing && !isBuffering) {
+        setShowControls(false);
+      }
+    }, 3000);
+  };
+
+  const toggleVideo = () => {
+    if (!videoReady) return;
+
+    setPlaying((prev) => {
+      const next = !prev;
+
+      if (next) {
+        scheduleHideControls();
+      } else {
+        setShowControls(true);
+
+        if (controlsTimeoutRef.current) {
+          clearTimeout(controlsTimeoutRef.current);
+        }
+      }
+
+      return next;
+    });
+  };
+
   const skipBy = (seconds: number) => {
+    if (!videoReady || durationMillis <= 0) return;
+
     const nextMs = Math.max(
       0,
       Math.min(durationMillis, positionMillis + seconds * 1000),
@@ -158,87 +235,234 @@ export default function PostDetail() {
     videoRef.current?.seek(nextMs / 1000);
 
     setPositionMillis(nextMs);
+
+    setShowControls(true);
+    scheduleHideControls();
   };
 
   const handleSeek = (e: any) => {
-    if (durationMillis <= 0 || progressTrackWidth <= 0) return;
+    if (!videoReady || durationMillis <= 0 || progressTrackWidth <= 0) return;
 
     const ratio = e.nativeEvent.locationX / progressTrackWidth;
-
     const nextMs = durationMillis * ratio;
 
     videoRef.current?.seek(nextMs / 1000);
 
     setPositionMillis(nextMs);
+
+    setShowControls(true);
+    scheduleHideControls();
+  };
+
+  const handleVideoTap = () => {
+    if (!videoReady) return;
+
+    if (showControls) {
+      if (playing && !isBuffering) {
+        setShowControls(false);
+      }
+    } else {
+      setShowControls(true);
+      scheduleHideControls();
+    }
+  };
+
+  const toggleFullscreen = () => {
+    if (!videoReady) return;
+
+    const newState = !isFullscreen;
+
+    setIsFullscreen(newState);
+
+    StatusBar.setHidden(newState);
+
+    setShowControls(true);
+
+    scheduleHideControls();
+  };
+
+  const handleVideoLoad = (data: OnLoadData) => {
+    const duration = toSafeMs(data.duration * 1000);
+
+    setDurationMillis(duration);
+
+    setVideoLoading(false);
+    setVideoReady(true);
+    const savedProgress = id ? getProgress(id) : 0;
+    const initialPosition = startAt > 0 ? startAt : savedProgress;
+
+    if (initialPosition > 0) {
+      setTimeout(() => {
+        videoRef.current?.seek(initialPosition);
+        setPositionMillis(initialPosition * 1000);
+      }, 300);
+    }
+
+    if (shouldAutoplay || initialPosition > 0) {
+      setPlaying(true);
+      scheduleHideControls();
+    }
+
+    if (shouldAutoplay || startAt > 0) {
+      setPlaying(true);
+    }
+    setVideoError(false);
+
+    if (loadTimeoutRef.current) {
+      clearTimeout(loadTimeoutRef.current);
+    }
+  };
+
+  const handleVideoProgress = (data: OnProgressData) => {
+    const current = toSafeMs(data.currentTime * 1000);
+
+    setPositionMillis(current);
+
+    if (data.playableDuration) {
+      setBufferedMillis(toSafeMs(data.playableDuration * 1000));
+    }
+
+    setIsBuffering(false);
+  };
+
+  const handleVideoBuffer = ({ isBuffering }: { isBuffering: boolean }) => {
+    setIsBuffering(isBuffering);
+
+    if (isBuffering) {
+      setShowControls(true);
+    }
+  };
+
+  const handleVideoError = (error: any) => {
+    console.error("Video error:", error);
+
+    setVideoError(true);
+    setVideoLoading(false);
+    setVideoReady(false);
+    setPlaying(false);
+  };
+
+  const handleVideoEnd = () => {
+    setPlaying(false);
+    setShowControls(true);
+
+    if (controlsTimeoutRef.current) {
+      clearTimeout(controlsTimeoutRef.current);
+    }
+  };
+
+  const retryVideoLoad = () => {
+    setVideoError(false);
+    setVideoLoading(true);
+    setVideoReady(false);
+    setPositionMillis(0);
+    setDurationMillis(0);
+    setBufferedMillis(0);
   };
 
   useFocusEffect(
     useCallback(() => {
-      // screen is focused
-
       return () => {
-        // screen is unfocused (BACK pressed)
-        setPlaying(false);
-
-        // HARD STOP video
-        videoRef.current?.seek(0);
+        if (id && positionMillis > 0) {
+          setProgress(id, Math.floor(positionMillis / 1000));
+        }
       };
-    }, []),
+    }, [id]),
   );
 
   useEffect(() => {
     return () => {
-      setPlaying(false);
-      videoRef.current?.pause?.(); // if supported
+      if (controlsTimeoutRef.current) {
+        clearTimeout(controlsTimeoutRef.current);
+      }
+
+      if (loadTimeoutRef.current) {
+        clearTimeout(loadTimeoutRef.current);
+      }
     };
   }, []);
 
-  const renderVideo = (fullscreen = false) => (
-    <View style={fullscreen ? styles.fullscreenMedia : styles.media}>
-      <Video
-        ref={videoRef}
-        source={{ uri: videoUri }}
-        style={StyleSheet.absoluteFill}
-        resizeMode={fullscreen ? "contain" : "cover"}
-        paused={!playing}
-        muted={isMuted}
-        repeat
-        controls={false}
-        playInBackground={false}
-        playWhenInactive={false}
-        ignoreSilentSwitch="ignore"
-        onLoad={({ duration }) => {
-          setDurationMillis(toSafeMs(duration * 1000));
-
-          if (startAt > 0) {
-            videoRef.current?.seek(startAt);
-          }
-        }}
-        onProgress={({ currentTime }) => {
-          setPositionMillis(currentTime * 1000);
-        }}
-      />
-
-      {!showControls && (
-        <Pressable
+  const renderVideo = () => (
+    <View style={isFullscreen ? styles.fullscreenMedia : styles.media}>
+      {videoUri && !videoError && (
+        <Video
+          ref={videoRef}
+          source={{ uri: videoUri }}
           style={StyleSheet.absoluteFill}
-          onPress={() => setShowControls(true)}
+          resizeMode="contain"
+          paused={!playing}
+          muted={isMuted}
+          repeat
+          controls={false}
+          playInBackground={false}
+          playWhenInactive={false}
+          ignoreSilentSwitch="ignore"
+          onLoad={handleVideoLoad}
+          onProgress={handleVideoProgress}
+          onBuffer={handleVideoBuffer}
+          onError={handleVideoError}
+          onEnd={handleVideoEnd}
+          progressUpdateInterval={500}
         />
       )}
 
-      {showControls && (
+      {(videoLoading || isBuffering) && !videoError && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#ef4444" />
+          <Text style={styles.loadingText}>
+            {videoLoading ? "Loading video..." : "Buffering..."}
+          </Text>
+        </View>
+      )}
+
+      {videoError && (
+        <View style={styles.errorContainer}>
+          <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
+
+          <Text style={styles.errorText}>Failed to load video</Text>
+
+          <Pressable style={styles.retryButton} onPress={retryVideoLoad}>
+            <Text style={styles.retryText}>Retry</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {videoReady && !videoError && !showControls && (
+        <Pressable style={styles.videoTapLayer} onPress={handleVideoTap} />
+      )}
+
+      {!showControls && playing && !isBuffering && videoReady && (
+        <View style={styles.topRightBadge}>
+          <View style={styles.iconBadge}>
+            <Ionicons
+              name={isMuted ? "volume-mute" : "volume-high"}
+              size={16}
+              color="#fff"
+            />
+          </View>
+        </View>
+      )}
+
+      {videoReady && !videoError && (
+        <Pressable style={StyleSheet.absoluteFill} onPress={handleVideoTap} />
+      )}
+
+      {showControls && videoReady && !videoError && (
         <>
-          <View style={styles.controlsOverlay} />
+          <Pressable style={styles.controlsOverlay} onPress={handleVideoTap} />
 
-          <Pressable
-            style={StyleSheet.absoluteFill}
-            onPress={() => setShowControls(false)}
-          />
-
-          <View style={styles.videoTopBar}>
+          <View style={styles.videoTopBar} pointerEvents="box-none">
             <Pressable
               style={styles.iconButton}
-              onPress={() => setIsMuted((p) => !p)}
+              onPress={() => {
+                setIsMuted((prev) => !prev);
+
+                setShowControls(true);
+
+                if (playing) {
+                  scheduleHideControls();
+                }
+              }}
             >
               <Ionicons
                 name={isMuted ? "volume-mute" : "volume-high"}
@@ -247,13 +471,7 @@ export default function PostDetail() {
               />
             </Pressable>
 
-            <Pressable
-              style={styles.iconButton}
-              onPress={() => {
-                setIsFullscreen((p) => !p);
-                StatusBar.setHidden(!isFullscreen);
-              }}
-            >
+            <Pressable style={styles.iconButton} onPress={toggleFullscreen}>
               <Ionicons
                 name={isFullscreen ? "contract" : "expand"}
                 size={20}
@@ -262,14 +480,17 @@ export default function PostDetail() {
             </Pressable>
           </View>
 
-          <View style={styles.centerControls}>
+          <View style={styles.centerControls} pointerEvents="box-none">
             <Pressable style={styles.smallControl} onPress={() => skipBy(-10)}>
               <Ionicons name="play-back" size={22} color="#fff" />
             </Pressable>
 
             <Pressable
               style={styles.bigControl}
-              onPress={() => setPlaying((p) => !p)}
+              onPress={(e) => {
+                e.stopPropagation();
+                toggleVideo();
+              }}
             >
               <Ionicons
                 name={playing ? "pause" : "play"}
@@ -292,17 +513,33 @@ export default function PostDetail() {
               onPress={handleSeek}
             >
               <View style={styles.progressTrack}>
+                {/* Buffered gray line */}
                 <View
                   style={[
-                    styles.progressFill,
-                    { width: `${progressPercent}%` },
+                    styles.progressBuffered,
+                    {
+                      width: `${bufferedPercent}%`,
+                    },
                   ]}
                 />
 
+                {/* Watched red line */}
+                <View
+                  style={[
+                    styles.progressFill,
+                    {
+                      width: `${progressPercent}%`,
+                    },
+                  ]}
+                />
+
+                {/* Thumb */}
                 <View
                   style={[
                     styles.progressThumb,
-                    { left: `${progressPercent}%` },
+                    {
+                      left: `${progressPercent}%`,
+                    },
                   ]}
                 />
               </View>
@@ -327,20 +564,25 @@ export default function PostDetail() {
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => {
-          const currentSeconds = Math.floor(positionMillis / 1000);
+          if (id && positionMillis > 0) {
+            setProgress(id, Math.floor(positionMillis / 1000));
+          }
 
-          setPlaying(false); // stop video immediately
+          setPlaying(false);
 
           router.back();
         }}
       >
         <Ionicons name="arrow-back" size={22} color="#fff" />
+
         <Text style={styles.backText}>Back</Text>
       </TouchableOpacity>
 
       {loading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color="#e94560" />
+
+          <Text style={styles.loadingText}>Loading post...</Text>
         </View>
       ) : error ? (
         <View style={styles.centered}>
@@ -353,7 +595,9 @@ export default function PostDetail() {
       ) : (
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 30 }}
+          contentContainerStyle={{
+            paddingBottom: 30,
+          }}
         >
           <View style={styles.headerCard}>
             <Text style={styles.profileName}>
@@ -365,8 +609,8 @@ export default function PostDetail() {
             </Text>
           </View>
 
-          {videoUri ? (
-            renderVideo(false)
+          {!isFullscreen && videoUri ? (
+            renderVideo()
           ) : imageUri ? (
             <Pressable
               onPress={() => setIsImageViewerVisible(true)}
@@ -430,24 +674,23 @@ export default function PostDetail() {
         </ScrollView>
       )}
 
+      {/* FULLSCREEN */}
       <Modal
         visible={isFullscreen}
         transparent={false}
         animationType="fade"
-        onRequestClose={() => setIsFullscreen(false)}
+        supportedOrientations={["portrait", "landscape"]}
+        onRequestClose={() => {
+          setIsFullscreen(false);
+          StatusBar.setHidden(false);
+        }}
       >
         <SafeAreaView style={styles.fullscreenContainer}>
-          <Pressable
-            style={styles.fullscreenClose}
-            onPress={() => setIsFullscreen(false)}
-          >
-            <Ionicons name="close" size={28} color="#fff" />
-          </Pressable>
-
-          {videoUri ? renderVideo(true) : null}
+          <View style={{ flex: 1 }}>{renderVideo()}</View>
         </SafeAreaView>
       </Modal>
 
+      {/* IMAGE VIEWER */}
       <Modal
         visible={isImageViewerVisible}
         transparent
@@ -472,7 +715,9 @@ export default function PostDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: {
+    flex: 1,
+  },
 
   backButton: {
     flexDirection: "row",
@@ -501,6 +746,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#fff",
     textAlign: "center",
+  },
+
+  loadingText: {
+    color: "#fff",
+    marginTop: 12,
+    fontSize: 14,
   },
 
   headerCard: {
@@ -552,9 +803,59 @@ const styles = StyleSheet.create({
     backgroundColor: "#1f2937",
   },
 
+  loadingContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.7)",
+    zIndex: 20,
+  },
+
+  errorContainer: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.8)",
+    padding: 20,
+    zIndex: 20,
+  },
+
+  retryButton: {
+    backgroundColor: "#ef4444",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+    marginTop: 16,
+  },
+
+  retryText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "700",
+  },
+
+  videoTapLayer: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 5,
+  },
+
+  topRightBadge: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    zIndex: 15,
+  },
+
+  iconBadge: {
+    backgroundColor: "rgba(0,0,0,0.55)",
+    borderRadius: 20,
+    padding: 6,
+  },
+
   controlsOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: "rgba(0,0,0,0.35)",
+    zIndex: 6,
   },
 
   videoTopBar: {
@@ -564,6 +865,7 @@ const styles = StyleSheet.create({
     right: 12,
     flexDirection: "row",
     justifyContent: "space-between",
+    zIndex: 10,
   },
 
   iconButton: {
@@ -582,6 +884,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     gap: 18,
+    zIndex: 10,
   },
 
   smallControl: {
@@ -607,6 +910,7 @@ const styles = StyleSheet.create({
     left: 12,
     right: 12,
     bottom: 16,
+    zIndex: 10,
   },
 
   progressHit: {
@@ -616,8 +920,14 @@ const styles = StyleSheet.create({
   progressTrack: {
     height: 4,
     borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.25)",
+    backgroundColor: "rgba(255,255,255,0.20)",
     overflow: "hidden",
+  },
+
+  progressBuffered: {
+    position: "absolute",
+    height: "100%",
+    backgroundColor: "rgba(255,255,255,0.45)",
   },
 
   progressFill: {
@@ -704,16 +1014,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
   },
 
-  fullscreenClose: {
-    position: "absolute",
-    top: 18,
-    right: 18,
-    zIndex: 20,
-    padding: 8,
-    backgroundColor: "rgba(0,0,0,0.5)",
-    borderRadius: 20,
-  },
-
   viewerBackdrop: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.96)",
@@ -727,18 +1027,5 @@ const styles = StyleSheet.create({
     right: 20,
     zIndex: 20,
     padding: 6,
-  },
-
-  viewerImageWrap: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingHorizontal: 12,
-  },
-
-  viewerImage: {
-    width: "100%",
-    height: "80%",
   },
 });

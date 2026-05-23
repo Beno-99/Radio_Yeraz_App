@@ -91,7 +91,7 @@ function AudioPlayerComponent({
 export default function RadioPlayer() {
   const [streamLinks, setStreamLinks] = useState<any[]>([]);
   const [STREAM_URL, setSTREAM_URL] = useState<string>(
-    "https://streaming05.liveboxstream.uk/proxy/radioye3/stream",
+    "https://streaming05.liveboxstream.uk/proxy/radioye3/32",
   );
   const [metadataUrl, setMetadataUrl] = useState<string>("");
 
