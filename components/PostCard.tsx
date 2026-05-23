@@ -65,6 +65,7 @@ function PostCard({
 }: any) {
   const { width: screenWidth } = useWindowDimensions();
   const videoRef = useRef<VideoRef>(null);
+  const fullscreenVideoRef = useRef<VideoRef>(null);
   const controlsTimeoutRef = useRef<number | null>(null);
   const loadTimeoutRef = useRef<number | null>(null);
 
@@ -160,29 +161,6 @@ function PostCard({
     }
   }, [postId, hasVideo, getProgress]);
 
-  // Seek to saved position after video is ready
-  useEffect(() => {
-    if (videoReady && postId && hasVideo) {
-      const savedProgress = getProgress(postId);
-      if (savedProgress > 0) {
-        const seekTimeout = setTimeout(() => {
-          videoRef.current?.seek(savedProgress);
-        }, 300);
-        return () => clearTimeout(seekTimeout);
-      }
-    }
-  }, [videoReady, postId, hasVideo, getProgress]);
-
-  // Save progress when position changes
-  useEffect(() => {
-    if (postId && hasVideo && positionMillis > 0 && durationMillis > 0) {
-      const debounce = setTimeout(() => {
-        setProgress(postId, Math.floor(positionMillis / 1000));
-      }, 1000);
-      return () => clearTimeout(debounce);
-    }
-  }, [postId, hasVideo, positionMillis, durationMillis, setProgress]);
-
   // Pause when scrolling
   useEffect(() => {
     if (isScrolling && playing) {
@@ -227,6 +205,16 @@ function PostCard({
     }
   }, [hasVideo, videoLoading, videoUri]);
 
+  useEffect(() => {
+    if (!postId) return;
+
+    const latest = getProgress(postId);
+
+    if (latest > 0) {
+      setPositionMillis(latest * 1000);
+    }
+  }, [isFullscreen]);
+
   const toggleVideo = () => {
     if (!hasVideo || !videoReady) return;
     const newPlayingState = !playing;
@@ -257,6 +245,16 @@ function PostCard({
   };
 
   const closeFullscreen = () => {
+    const latest = getProgress(postId);
+
+    setPositionMillis(latest * 1000);
+
+    requestAnimationFrame(() => {
+      videoRef.current?.seek(latest);
+    });
+
+    setPlaying(true);
+
     setIsFullscreen(false);
     StatusBar.setHidden(false);
     setShowControls(true);
@@ -305,6 +303,7 @@ function PostCard({
 
   const handleVideoLoad = (data: OnLoadData) => {
     const duration = toSafeMs(data.duration * 1000);
+
     setDurationMillis(duration);
     setVideoLoading(false);
     setVideoReady(true);
@@ -313,12 +312,25 @@ function PostCard({
     if (loadTimeoutRef.current) {
       clearTimeout(loadTimeoutRef.current);
     }
+
+    const saved = getProgress(postId);
+
+    if (saved > 0) {
+      requestAnimationFrame(() => {
+        videoRef.current?.seek(saved);
+      });
+    }
   };
 
   const handleVideoProgress = (data: OnProgressData) => {
     const current = toSafeMs(data.currentTime * 1000);
 
     setPositionMillis(current);
+
+    if (postId) {
+      setProgress(postId, Math.floor(current / 1000));
+    }
+
     setIsBuffering(false);
 
     if (durationMillis > 0 && data.playableDuration) {
@@ -549,6 +561,7 @@ function PostCard({
                     onBuffer={handleVideoBuffer}
                     onError={handleVideoError}
                     onEnd={handleVideoEnd}
+                    progressUpdateInterval={500}
                     posterResizeMode="contain"
                   />
                 )}
@@ -705,7 +718,7 @@ function PostCard({
           <View style={styles.fullscreenContainer}>
             {videoUri && !videoError && (
               <Video
-                ref={videoRef}
+                ref={fullscreenVideoRef}
                 source={{ uri: videoUri }}
                 style={StyleSheet.absoluteFill}
                 resizeMode="contain"
@@ -721,6 +734,7 @@ function PostCard({
                 onBuffer={handleVideoBuffer}
                 onError={handleVideoError}
                 onEnd={handleVideoEnd}
+                progressUpdateInterval={500}
               />
             )}
 
