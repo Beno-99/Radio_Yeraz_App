@@ -115,6 +115,8 @@ export default function PostDetail() {
   const controlsTimeoutRef = useRef<number | null>(null);
   const loadTimeoutRef = useRef<number | null>(null);
 
+  const fullscreenVideoRef = useRef<VideoRef>(null);
+
   useEffect(() => {
     const fetchPost = async () => {
       if (!id || id === "[id]" || id.trim() === "") {
@@ -160,16 +162,6 @@ export default function PostDetail() {
       };
     }
   }, [post?.video, videoLoading]);
-
-  useEffect(() => {
-    if (id && post?.video && positionMillis > 0 && durationMillis > 0) {
-      const debounce = setTimeout(() => {
-        setProgress(id, Math.floor(positionMillis / 1000));
-      }, 1000);
-
-      return () => clearTimeout(debounce);
-    }
-  }, [id, post?.video, positionMillis, durationMillis]);
 
   const imageUri = buildImageUrl(post?.mainImage);
   const videoUri = buildImageUrl(post?.video);
@@ -318,10 +310,13 @@ export default function PostDetail() {
 
     setPositionMillis(current);
 
+    if (id) {
+      setProgress(id, Math.floor(current / 1000));
+    }
+
     if (data.playableDuration) {
       setBufferedMillis(toSafeMs(data.playableDuration * 1000));
     }
-
     setIsBuffering(false);
   };
 
@@ -386,7 +381,7 @@ export default function PostDetail() {
     <View style={isFullscreen ? styles.fullscreenMedia : styles.media}>
       {videoUri && !videoError && (
         <Video
-          ref={videoRef}
+          ref={fullscreenVideoRef}
           source={{ uri: videoUri }}
           style={StyleSheet.absoluteFill}
           resizeMode="contain"
