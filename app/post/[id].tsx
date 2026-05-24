@@ -111,6 +111,7 @@ export default function PostDetail() {
   const [videoReady, setVideoReady] = useState(false);
   const [isBuffering, setIsBuffering] = useState(false);
 
+  const currentTimeRef = useRef(0);
   const videoRef = useRef<VideoRef>(null);
   const controlsTimeoutRef = useRef<number | null>(null);
   const loadTimeoutRef = useRef<number | null>(null);
@@ -262,15 +263,28 @@ export default function PostDetail() {
   const toggleFullscreen = () => {
     if (!videoReady) return;
 
-    const newState = !isFullscreen;
+    const currentTime = currentTimeRef.current;
+    const nextFullscreen = !isFullscreen;
 
-    setIsFullscreen(newState);
+    setIsFullscreen(nextFullscreen);
 
-    StatusBar.setHidden(newState);
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        if (nextFullscreen) {
+          fullscreenVideoRef.current?.seek(currentTime);
+        } else {
+          videoRef.current?.seek(currentTime);
+        }
+      }, 250);
+    });
+
+    StatusBar.setHidden(nextFullscreen);
 
     setShowControls(true);
 
-    scheduleHideControls();
+    if (playing) {
+      scheduleHideControls();
+    }
   };
 
   const handleVideoLoad = (data: OnLoadData) => {
@@ -306,6 +320,8 @@ export default function PostDetail() {
   };
 
   const handleVideoProgress = (data: OnProgressData) => {
+    currentTimeRef.current = data.currentTime;
+
     const current = toSafeMs(data.currentTime * 1000);
 
     setPositionMillis(current);
@@ -317,6 +333,7 @@ export default function PostDetail() {
     if (data.playableDuration) {
       setBufferedMillis(toSafeMs(data.playableDuration * 1000));
     }
+
     setIsBuffering(false);
   };
 
@@ -381,7 +398,7 @@ export default function PostDetail() {
     <View style={isFullscreen ? styles.fullscreenMedia : styles.media}>
       {videoUri && !videoError && (
         <Video
-          ref={fullscreenVideoRef}
+          ref={isFullscreen ? fullscreenVideoRef : videoRef}
           source={{ uri: videoUri }}
           style={StyleSheet.absoluteFill}
           resizeMode="contain"
