@@ -64,6 +64,8 @@ function PostCard({
   isScrolling = false,
 }: any) {
   const { width: screenWidth } = useWindowDimensions();
+
+  const currentTimeRef = useRef(0);
   const videoRef = useRef<VideoRef>(null);
   const fullscreenVideoRef = useRef<VideoRef>(null);
   const controlsTimeoutRef = useRef<number | null>(null);
@@ -238,26 +240,42 @@ function PostCard({
 
   const openFullscreen = () => {
     if (!videoReady) return;
+
+    const currentTime = currentTimeRef.current;
+
     setIsFullscreen(true);
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        fullscreenVideoRef.current?.seek(currentTime);
+      }, 250);
+    });
+
     StatusBar.setHidden(true);
+
     setShowControls(true);
+
     scheduleHideControls();
   };
 
   const closeFullscreen = () => {
-    const latest = getProgress(postId);
-
-    setPositionMillis(latest * 1000);
-
-    requestAnimationFrame(() => {
-      videoRef.current?.seek(latest);
-    });
-
-    setPlaying(true);
+    const currentTime = currentTimeRef.current;
 
     setIsFullscreen(false);
+
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        videoRef.current?.seek(currentTime);
+      }, 250);
+    });
+
     StatusBar.setHidden(false);
+
     setShowControls(true);
+
+    if (playing) {
+      scheduleHideControls();
+    }
   };
 
   const skipBy = (seconds: number) => {
@@ -323,6 +341,8 @@ function PostCard({
   };
 
   const handleVideoProgress = (data: OnProgressData) => {
+    currentTimeRef.current = data.currentTime;
+
     const current = toSafeMs(data.currentTime * 1000);
 
     setPositionMillis(current);
@@ -332,12 +352,6 @@ function PostCard({
     }
 
     setIsBuffering(false);
-
-    if (durationMillis > 0 && data.playableDuration) {
-      const buffered = ((data.playableDuration * 1000) / durationMillis) * 100;
-
-      setBufferedPercent(Math.min(buffered, 100));
-    }
   };
 
   const handleVideoBuffer = ({ isBuffering }: { isBuffering: boolean }) => {
@@ -549,7 +563,7 @@ function PostCard({
                     source={{ uri: videoUri }}
                     style={StyleSheet.absoluteFill}
                     resizeMode="contain"
-                    paused={!playing}
+                    paused={!playing || isFullscreen}
                     muted={isMuted}
                     repeat
                     controls={false}
@@ -722,7 +736,7 @@ function PostCard({
                 source={{ uri: videoUri }}
                 style={StyleSheet.absoluteFill}
                 resizeMode="contain"
-                paused={!playing}
+                paused={!playing || !isFullscreen}
                 muted={isMuted}
                 repeat
                 controls={false}
