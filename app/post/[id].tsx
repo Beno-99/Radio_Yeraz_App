@@ -401,7 +401,7 @@ export default function PostDetail() {
           ref={isFullscreen ? fullscreenVideoRef : videoRef}
           source={{ uri: videoUri }}
           style={StyleSheet.absoluteFill}
-          resizeMode="contain"
+          resizeMode={isFullscreen ? "contain" : "cover"}
           paused={!playing}
           muted={isMuted}
           repeat
@@ -666,20 +666,6 @@ export default function PostDetail() {
                 <Text style={styles.value} numberOfLines={1}>
                   {post.link}
                 </Text>
-              </View>
-            ) : null}
-
-            <View style={styles.row}>
-              <Text style={styles.label}>Status</Text>
-
-              <Text style={styles.value}>
-                {post.isLive ? "Live" : "Not Live"}
-              </Text>
-            </View>
-
-            {post.isPublished ? (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>Published</Text>
               </View>
             ) : null}
           </View>
