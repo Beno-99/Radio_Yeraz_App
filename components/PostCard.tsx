@@ -760,7 +760,6 @@ function PostCard({
             )}
 
             {/* Tap layer */}
-            {/* Tap layer */}
             {videoReady && !videoError && !showControls && (
               <Pressable
                 style={styles.videoTapLayer}
@@ -849,7 +848,7 @@ const styles = StyleSheet.create({
     position: "relative",
     width: "100%",
     overflow: "hidden",
-    backgroundColor: "#000",
+    backgroundColor: "transparent",
   },
   imageTouchable: {
     width: "100%",
@@ -858,10 +857,14 @@ const styles = StyleSheet.create({
   imageFill: {
     width: "100%",
     height: "100%",
-    backgroundColor: "#000",
+    backgroundColor: "transparent",
   },
   loadingContainer: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: "12%",
+    bottom: "12%",
+    left: 0,
+    right: 0,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "rgba(0,0,0,0.7)",
@@ -904,7 +907,7 @@ const styles = StyleSheet.create({
   },
   topRightBadges: {
     position: "absolute",
-    top: 8,
+    top: 40,
     right: 8,
     flexDirection: "row",
     gap: 6,
@@ -917,14 +920,19 @@ const styles = StyleSheet.create({
     padding: 6,
   },
   controlsOverlayBg: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,0,0.35)",
+    position: "absolute",
+    top: "12%",
+    bottom: "12%",
+    left: 0,
+    right: 0,
+    backgroundColor: "rgba(0,0,0,0.25)",
     zIndex: 6,
+    borderRadius: 0,
     pointerEvents: "none",
   },
   topControls: {
     position: "absolute",
-    top: 10,
+    top: 45,
     left: 12,
     right: 12,
     flexDirection: "row",
