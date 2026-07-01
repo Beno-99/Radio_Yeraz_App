@@ -1,52 +1,66 @@
 // hooks/usePosts.ts
-import { mobileApi } from "@/services/mobileApi";
+import {
+  extractApiArray,
+  getApiErrorMessage,
+  isCancelledApiError,
+  mobileApi,
+} from "@/services/mobileApi";
+import { ApiPaginatedResponse, Post } from "@/types/api";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AppState, AppStateStatus } from "react-native";
 
-const REFETCH_INTERVAL = 10 * 60 * 1000; // 10 minutes
+const REFETCH_INTERVAL = 10 * 60 * 1000;
+
+const isExpired = (post: Post) => {
+  if (!post.expiresAt) return false;
+  const expiresAt = new Date(post.expiresAt).getTime();
+  return Number.isFinite(expiresAt) ? expiresAt < Date.now() : false;
+};
+
+const isVisiblePost = (post: Post) =>
+  post.isPublished === true && post.status === "published" && !isExpired(post);
 
 export function usePosts() {
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const appStateRef = useRef(AppState.currentState);
-
-  const isExpired = (post: any) => {
-    if (!post?.expiresAt) return false;
-    const expiresAt = new Date(post.expiresAt).getTime();
-    return Number.isFinite(expiresAt) ? expiresAt < Date.now() : false;
-  };
+  const abortRef = useRef<AbortController | null>(null);
 
   const fetchPosts = useCallback(async (silent = false) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     try {
       if (!silent) setLoading(true);
+      setError(null);
 
-      const res = await mobileApi.get("/posts", {
-        params: { limit: 50 },
+      const res = await mobileApi.get<ApiPaginatedResponse<Post>>("/posts", {
+        params: {
+          isPublished: true,
+          limit: 50,
+          sortBy: "postedDate",
+          sortOrder: "desc",
+        },
+        signal: controller.signal,
       });
 
-      const payload =
-        res?.data?.data ?? res?.data?.posts ?? res?.data?.items ?? res?.data;
+      const activePosts = extractApiArray<Post>(res.data).filter(isVisiblePost);
 
-      const allPosts = Array.isArray(payload) ? payload : [];
-
-      const activePosts = allPosts.filter((post: any) => {
-        const isPublished = post.isPublished === true;
-        const statusPublished = post.status === "published";
-        const expired = isExpired(post);
-
-        return isPublished && statusPublished && !expired;
-      });
-
-      console.log(`Total: ${allPosts.length}, Active: ${activePosts.length}`);
-
-      setPosts(activePosts);
-
-    } catch (error: any) {
-      console.log("Posts fetch error:", error?.message);
+      if (!controller.signal.aborted) {
+        setPosts(activePosts);
+      }
+    } catch (err) {
+      if (!isCancelledApiError(err) && !controller.signal.aborted) {
+        setError(getApiErrorMessage(err));
+      }
     } finally {
-      setLoading(false);
-      setRefreshing(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+        setRefreshing(false);
+      }
     }
   }, []);
 
@@ -66,6 +80,7 @@ export function usePosts() {
     );
 
     return () => {
+      abortRef.current?.abort();
       clearInterval(interval);
       appStateSub.remove();
     };
@@ -76,5 +91,12 @@ export function usePosts() {
     fetchPosts();
   }, [fetchPosts]);
 
-  return { posts, loading, refreshing, onRefresh, refetch: fetchPosts };
+  return {
+    posts,
+    loading,
+    refreshing,
+    error,
+    onRefresh,
+    refetch: fetchPosts,
+  };
 }

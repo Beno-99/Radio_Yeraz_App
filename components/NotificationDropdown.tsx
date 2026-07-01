@@ -4,6 +4,7 @@ import {
   AppNotification,
   useNotificationStore,
 } from "@/stores/notificationStore";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
 import {
@@ -25,22 +26,23 @@ const timeAgo = (dateStr: string) => {
   const minutes = Math.floor(seconds / 60);
   const hours = Math.floor(minutes / 60);
   const days = Math.floor(hours / 24);
+  if (!Number.isFinite(seconds)) return "recent";
   if (seconds < 60) return "just now";
   if (minutes < 60) return `${minutes}m ago`;
   if (hours < 24) return `${hours}h ago`;
   return `${days}d ago`;
 };
 
-const typeIcon: Record<string, string> = {
-  NEW_POST: "📢",
-  POST_UPDATED: "✏️",
-  POST_DELETED: "🗑️",
-  POST_PUBLISHED: "✅",
-  EVENT_REMINDER: "📅",
-  AD_CREATED: "🆕",
-  AD_UPDATED: "✏️",
-  AD_DELETED: "🗑️",
-  AD_TOGGLED: "🔄",
+const typeIcon: Record<string, keyof typeof Ionicons.glyphMap> = {
+  NEW_POST: "megaphone-outline",
+  POST_UPDATED: "create-outline",
+  POST_DELETED: "trash-outline",
+  POST_PUBLISHED: "checkmark-circle-outline",
+  EVENT_REMINDER: "calendar-outline",
+  CAROUSEL_CREATED: "images-outline",
+  CAROUSEL_UPDATED: "create-outline",
+  CAROUSEL_DELETED: "trash-outline",
+  CAROUSEL_TOGGLED: "sync-outline",
 };
 
 interface Props {
@@ -65,11 +67,9 @@ export default function NotificationDropdown({
   const slideAnim = useRef(new Animated.Value(-20)).current;
 
   const handleNotificationPress = (item: AppNotification) => {
-    // Mark as read
     onMarkRead?.(item.id || item._id || "");
     onClose();
 
-    // Navigate to post if has postId
     if (item.data?.postId) {
       const postId = String(item.data.postId);
       onNotificationPress?.(postId);
@@ -99,11 +99,9 @@ export default function NotificationDropdown({
       fadeAnim.setValue(0);
       slideAnim.setValue(-20);
     }
-  }, [visible]);
+  }, [fadeAnim, slideAnim, visible]);
 
   const renderItem = ({ item }: { item: AppNotification }) => {
-    // ← Show message only for EVENT_REMINDER and NEW_POST
-    // Hide message for AD types (those are admin-style)
     const showMessage =
       item.type === "EVENT_REMINDER" ||
       item.type === "NEW_POST" ||
@@ -115,7 +113,12 @@ export default function NotificationDropdown({
         onPress={() => handleNotificationPress(item)}
         activeOpacity={0.7}
       >
-        <Text style={styles.notifIcon}>{typeIcon[item.type] || "🔔"}</Text>
+        <Ionicons
+          name={typeIcon[item.type] || "notifications-outline"}
+          size={20}
+          color="#e94560"
+          style={styles.notifIcon}
+        />
         <View style={styles.notifContent}>
           <Text style={styles.notifTitle} numberOfLines={3}>
             {item.title}
@@ -127,7 +130,7 @@ export default function NotificationDropdown({
           ) : null}
           <Text style={styles.notifTime}>{timeAgo(item.createdAt)}</Text>
         </View>
-        {!item.isRead && <View style={styles.unreadDot} />}
+        {!item.isRead ? <View style={styles.unreadDot} /> : null}
       </TouchableOpacity>
     );
   };
@@ -150,7 +153,6 @@ export default function NotificationDropdown({
           },
         ]}
       >
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Notifications</Text>
           <TouchableOpacity onPress={onMarkAllRead}>
@@ -158,20 +160,23 @@ export default function NotificationDropdown({
           </TouchableOpacity>
         </View>
 
-        {/* List */}
         {notifications.length === 0 ? (
           <View style={styles.empty}>
-            <Text style={styles.emptyIcon}>🔔</Text>
+            <Ionicons
+              name="notifications-outline"
+              size={32}
+              color="#6b7280"
+            />
             <Text style={styles.emptyText}>No notifications yet</Text>
           </View>
         ) : (
           <FlatList
             data={notifications}
             renderItem={renderItem}
-            keyExtractor={(item) =>
+            keyExtractor={(item, index) =>
               item.id?.toString() ||
               item._id?.toString() ||
-              Math.random().toString()
+              `${item.createdAt}-${index}`
             }
             style={styles.list}
             showsVerticalScrollIndicator={false}
@@ -226,7 +231,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   unreadItem: { backgroundColor: "rgba(233,69,96,0.06)" },
-  notifIcon: { fontSize: 20, marginTop: 2 },
+  notifIcon: { marginTop: 2 },
   notifContent: { flex: 1 },
   notifTitle: {
     color: "#fff",
@@ -244,7 +249,6 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   empty: { alignItems: "center", paddingVertical: 40, gap: 8 },
-  emptyIcon: { fontSize: 32 },
   emptyText: { color: "#6b7280", fontSize: 14 },
   notifMessage: {
     color: "#d1d5db",

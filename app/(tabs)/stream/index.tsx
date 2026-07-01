@@ -1,12 +1,19 @@
 import PageHeader from "@/components/PageHeader";
-import { IMAGE_URL, mobileApi } from "@/services/mobileApi";
+import { extractApiArray, mobileApi } from "@/services/mobileApi";
 import { socketService } from "@/services/socket.service";
+import { ApiPaginatedResponse, Carousel, StreamLink } from "@/types/api";
+import {
+  getAbsoluteMediaUrl,
+  getSafeExternalUrl,
+  getYouTubeThumbnail,
+  getYouTubeVideoId,
+  getYouTubeWatchUrl,
+} from "@/utils/media";
 import { Ionicons } from "@expo/vector-icons";
 import { getApp } from "@react-native-firebase/app";
 import {
   AuthorizationStatus,
   getMessaging,
-  getToken,
   requestPermission,
   setBackgroundMessageHandler,
 } from "@react-native-firebase/messaging";
@@ -25,6 +32,8 @@ import {
   Image,
   Linking,
   LogBox,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -46,6 +55,10 @@ LogBox.ignoreLogs(["Unable to activate keep awake"]);
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const fallbackImage = require("@/assets/images/sublogo.png");
+const FALLBACK_STREAM_URL =
+  process.env.EXPO_PUBLIC_STREAM_URL ||
+  "https://streaming05.liveboxstream.uk/proxy/radioye3/stream";
+const FALLBACK_METADATA_URL = process.env.EXPO_PUBLIC_STREAM_METADATA_URL || "";
 
 const app = getApp();
 const messaging = getMessaging(app);
@@ -89,14 +102,16 @@ function AudioPlayerComponent({
 
 // ====================== MAIN COMPONENT ======================
 export default function RadioPlayer() {
-  const [streamLinks, setStreamLinks] = useState<any[]>([]);
   const [STREAM_URL, setSTREAM_URL] = useState<string>(
-    "https://streaming05.liveboxstream.uk/proxy/radioye3/32",
+    FALLBACK_STREAM_URL,
   );
-  const [metadataUrl, setMetadataUrl] = useState<string>("");
+  const [metadataUrl, setMetadataUrl] = useState<string>(FALLBACK_METADATA_URL);
 
-  const [ads, setAds] = useState<any[]>([]);
-  const [adsLoading, setAdsLoading] = useState(true);
+  const [carousels, setCarousels] = useState<Carousel[]>([]);
+  const [carouselsLoading, setCarouselsLoading] = useState(true);
+  const [failedCarouselMediaIds, setFailedCarouselMediaIds] = useState<
+    Record<string, true>
+  >({});
   const [refreshing, setRefreshing] = useState(false);
   const [trackTitle, setTrackTitle] = useState("LIVE STREAM");
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -117,7 +132,7 @@ export default function RadioPlayer() {
   const isBuffering = status?.isBuffering ?? false;
 
   // ================== NOTIFICATION PERMISSION ==================
-  const requestNotificationPermission = async () => {
+  const requestNotificationPermission = useCallback(async () => {
     try {
       const authStatus = await requestPermission(messaging);
       const enabled =
@@ -125,29 +140,33 @@ export default function RadioPlayer() {
         authStatus === AuthorizationStatus.PROVISIONAL;
 
       if (enabled) {
-        const token = await getToken(messaging);
-        console.log("✅ FCM Token received:", token);
+        console.log("Notification permission granted.");
       }
     } catch (error) {
       console.error("Permission request error:", error);
     }
-  };
+  }, []);
 
   // ================== FETCH STREAM LINKS ==================
-  const fetchStreamLinks = async () => {
+  const fetchStreamLinks = useCallback(async () => {
     try {
-      const { data } = await mobileApi.get("/stream-links");
-      setStreamLinks(data);
+      const { data } = await mobileApi.get<StreamLink[]>("/stream-links/active");
+      const links = extractApiArray<StreamLink>(data);
 
-      const activeLink = data.find((link: any) => link.isActive === true);
-      const selectedStreamUrl = activeLink?.url || data[0]?.url;
+      const activeLink = links.find((link) => link.isActive) || links[0];
+      const selectedStreamUrl = activeLink?.url || FALLBACK_STREAM_URL;
       if (selectedStreamUrl) {
         setSTREAM_URL(selectedStreamUrl);
         console.log("🎵 Using Stream URL:", selectedStreamUrl);
       }
 
+      setMetadataUrl(FALLBACK_METADATA_URL);
+
       if (data?.length > 1) {
-        const metaItem = data[1];
+        const metaItem = data[1] as StreamLink & {
+          metadataUrl?: string;
+          metaUrl?: string;
+        };
         const metaUrl =
           metaItem?.metadataUrl || metaItem?.url || metaItem?.metaUrl || "";
         setMetadataUrl(metaUrl);
@@ -155,20 +174,36 @@ export default function RadioPlayer() {
       }
     } catch (error) {
       console.error("Failed to fetch stream links:", error);
+      setSTREAM_URL(FALLBACK_STREAM_URL);
+      setMetadataUrl(FALLBACK_METADATA_URL);
     }
-  };
+  }, []);
 
-  const fetchAds = useCallback(async (silent = false) => {
+  const fetchCarousels = useCallback(async (silent = false) => {
     try {
-      if (!silent) setAdsLoading(true);
-      const { data } = await mobileApi.get("/ads", {
-        params: { isActive: true },
+      if (!silent) setCarouselsLoading(true);
+      const { data } = await mobileApi.get<ApiPaginatedResponse<Carousel>>(
+        "/carousels/public",
+        {
+          params: { limit: 10 },
+        },
+      );
+      const nextCarousels = extractApiArray<Carousel>(data).filter((item) => {
+        const videoId = getYouTubeVideoId(item.youtubeVideoId, item.youtubeUrl);
+        const hasMedia = Boolean(videoId || getAbsoluteMediaUrl(item.image));
+        return item.isActive && item.status === "active" && hasMedia;
       });
-      setAds(data?.data ?? []);
+
+      setCarousels(nextCarousels);
+      setCurrentIndex((index) =>
+        nextCarousels.length === 0
+          ? 0
+          : Math.min(index, nextCarousels.length - 1),
+      );
     } catch (err) {
-      console.log("Ads fetch error:", err);
+      console.log("Carousels fetch error:", err);
     } finally {
-      setAdsLoading(false);
+      setCarouselsLoading(false);
     }
   }, []);
 
@@ -180,25 +215,30 @@ export default function RadioPlayer() {
     }
 
     fetchStreamLinks();
-    fetchAds();
+    fetchCarousels();
 
     const appStateSub = AppState.addEventListener(
       "change",
       (state: AppStateStatus) => {
         if (state === "active") {
           fetchStreamLinks();
-          fetchAds(true);
+          fetchCarousels(true);
         }
       },
     );
 
-    const handleAdminNotification = (data: any) => {
+    const handleAdminNotification = (data: { type?: string }) => {
+      const notificationType = data.type || "";
+
       if (
-        ["AD_CREATED", "AD_UPDATED", "AD_DELETED", "AD_TOGGLED"].includes(
-          data?.type,
-        )
+        [
+          "CAROUSEL_CREATED",
+          "CAROUSEL_UPDATED",
+          "CAROUSEL_DELETED",
+          "CAROUSEL_TOGGLED",
+        ].includes(notificationType)
       ) {
-        fetchAds(true);
+        fetchCarousels(true);
       }
     };
 
@@ -208,7 +248,7 @@ export default function RadioPlayer() {
       appStateSub.remove();
       socketService.off("admin_notification", handleAdminNotification);
     };
-  }, [fetchAds]);
+  }, [fetchCarousels, fetchStreamLinks, requestNotificationPermission]);
 
   // ================== METADATA ==================
   useEffect(() => {
@@ -273,7 +313,7 @@ export default function RadioPlayer() {
   useEffect(() => {
     if (autoPlayTimerRef.current) clearInterval(autoPlayTimerRef.current);
 
-    const items = ads.length > 0 ? ads : [fallbackImage];
+    const items = carousels;
     if (items.length <= 1 || !autoPlayEnabled) return;
 
     autoPlayTimerRef.current = setInterval(() => {
@@ -293,7 +333,7 @@ export default function RadioPlayer() {
         autoPlayTimerRef.current = null;
       }
     };
-  }, [ads, autoPlayEnabled]);
+  }, [carousels, autoPlayEnabled]);
 
   // ================== SAFER CLEANUP ==================
   useEffect(() => {
@@ -301,16 +341,10 @@ export default function RadioPlayer() {
       if (autoPlayTimerRef.current) {
         clearInterval(autoPlayTimerRef.current);
       }
-      // Safer way to pause
-      try {
-        player.pause();
-      } catch (e) {
-        // Ignore if player is already released
-      }
     };
-  }, [player]);
+  }, []);
 
-  const handleScroll = (event: any) => {
+  const handleScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     const newIndex = Math.round(
       event.nativeEvent.contentOffset.x / SCREEN_WIDTH,
     );
@@ -319,9 +353,9 @@ export default function RadioPlayer() {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([fetchAds(false), fetchStreamLinks()]);
+    await Promise.all([fetchCarousels(false), fetchStreamLinks()]);
     setRefreshing(false);
-  }, [fetchAds]);
+  }, [fetchCarousels, fetchStreamLinks]);
 
   const togglePlayback = () => {
     try {
@@ -362,7 +396,7 @@ export default function RadioPlayer() {
     transform: [{ rotate: `${spin.value * 360}deg` }],
   }));
 
-  const carouselItems = ads.length > 0 ? ads : [fallbackImage];
+  const carouselItems = carousels;
 
   return (
     <LinearGradient
@@ -475,78 +509,104 @@ export default function RadioPlayer() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.carouselSection}>
-              {adsLoading ? (
-                <ActivityIndicator
-                  size="small"
-                  color="#e94560"
-                  style={{ marginTop: 50 }}
-                />
-              ) : (
-                <>
-                  <ScrollView
-                    ref={scrollRef}
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    onScroll={handleScroll}
-                    scrollEventThrottle={16}
-                    style={styles.carouselScroll}
-                  >
-                    {carouselItems.map((item, index) => {
-                      const hasLink = !!item?.targetUrl?.trim(); // Best check: not empty and not just spaces
+            {carouselsLoading || carouselItems.length > 0 ? (
+              <View style={styles.carouselSection}>
+                {carouselsLoading ? (
+                  <ActivityIndicator
+                    size="small"
+                    color="#e94560"
+                    style={{ marginTop: 50 }}
+                  />
+                ) : (
+                  <>
+                    <ScrollView
+                      ref={scrollRef}
+                      horizontal
+                      pagingEnabled
+                      showsHorizontalScrollIndicator={false}
+                      onScroll={handleScroll}
+                      scrollEventThrottle={16}
+                      style={styles.carouselScroll}
+                    >
+                      {carouselItems.map((item, index) => {
+                        const itemKey = item._id || item.id || String(index);
+                        const videoId = getYouTubeVideoId(
+                          item.youtubeVideoId,
+                          item.youtubeUrl,
+                        );
+                        const mediaUri = videoId
+                          ? getYouTubeThumbnail(videoId)
+                          : getAbsoluteMediaUrl(item.image);
+                        const targetUrl =
+                          getSafeExternalUrl(item.targetUrl) ||
+                          getYouTubeWatchUrl(videoId);
+                        const hasLink = Boolean(targetUrl);
+                        const source =
+                          mediaUri && !failedCarouselMediaIds[itemKey]
+                            ? { uri: mediaUri }
+                            : fallbackImage;
 
-                      return (
-                        <TouchableOpacity
-                          key={item._id || index}
-                          activeOpacity={hasLink ? 0.7 : 1}
-                          onPress={() => {
-                            if (hasLink) {
-                              Linking.openURL(item.targetUrl);
-                            }
-                          }}
-                          disabled={!hasLink}
-                          style={styles.carouselItem}
-                        >
-                          <Image
-                            source={
-                              item.image
-                                ? { uri: IMAGE_URL + item.image }
-                                : item
-                            }
-                            style={styles.carouselImage}
-                            resizeMode="cover"
+                        return (
+                          <TouchableOpacity
+                            key={itemKey}
+                            activeOpacity={hasLink ? 0.7 : 1}
+                            onPress={() => {
+                              if (targetUrl) {
+                                Linking.openURL(targetUrl);
+                              }
+                            }}
+                            disabled={!hasLink}
+                            style={styles.carouselItem}
+                          >
+                            <Image
+                              source={source}
+                              style={styles.carouselImage}
+                              resizeMode="cover"
+                              onError={() =>
+                                setFailedCarouselMediaIds((failed) => ({
+                                  ...failed,
+                                  [itemKey]: true,
+                                }))
+                              }
+                            />
+
+                            {videoId ? (
+                              <View style={styles.carouselPlayBadge}>
+                                <Ionicons name="play" size={20} color="#fff" />
+                              </View>
+                            ) : null}
+
+                            {hasLink ? (
+                              <View style={styles.linkBadge}>
+                                <Ionicons
+                                  name="link-outline"
+                                  size={16}
+                                  color="#fff"
+                                />
+                              </View>
+                            ) : null}
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </ScrollView>
+
+                    {carouselItems.length > 1 ? (
+                      <View style={styles.paginationContainer}>
+                        {carouselItems.map((_, i) => (
+                          <View
+                            key={i}
+                            style={[
+                              styles.paginationDot,
+                              currentIndex === i && styles.activePaginationDot,
+                            ]}
                           />
-
-                          {/* Optional visual hint - shows only when clickable */}
-                          {hasLink && (
-                            <View style={styles.linkBadge}>
-                              <Ionicons
-                                name="link-outline"
-                                size={16}
-                                color="#fff"
-                              />
-                            </View>
-                          )}
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </ScrollView>
-
-                  <View style={styles.paginationContainer}>
-                    {carouselItems.map((_, i) => (
-                      <View
-                        key={i}
-                        style={[
-                          styles.paginationDot,
-                          currentIndex === i && styles.activePaginationDot,
-                        ]}
-                      />
-                    ))}
-                  </View>
-                </>
-              )}
-            </View>
+                        ))}
+                      </View>
+                    ) : null}
+                  </>
+                )}
+              </View>
+            ) : null}
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -700,6 +760,15 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: 999,
     backgroundColor: "#e94560",
+  },
+  carouselPlayBadge: {
+    position: "absolute",
+    alignItems: "center",
+    justifyContent: "center",
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "rgba(233, 69, 96, 0.9)",
   },
   linkBadge: {
     position: "absolute",
