@@ -234,9 +234,10 @@ export default function PostDetail() {
 
   const openUrl = async (url?: string) => {
     if (!url) return;
-    const supported = await Linking.canOpenURL(url);
-    if (supported) {
+    try {
       await Linking.openURL(url);
+    } catch (error) {
+      console.warn("Unable to open external link:", error);
     }
   };
 
