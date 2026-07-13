@@ -20,6 +20,7 @@ import {
   getSafeExternalUrl,
   getYouTubeVideoId,
 } from "@/utils/media";
+import { formatPostLinkLabel, getSafePostLinks } from "@/utils/postLinks";
 import { Ionicons } from "@expo/vector-icons";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -220,7 +221,7 @@ export default function PostDetail() {
     return routePostId ? useVideoProgress.getState().getProgress(routePostId) : 0;
   }, [routePostId, routeStartTime]);
   const facebookUrl = getSafeExternalUrl(post?.facebookUrl);
-  const externalUrl = getSafeExternalUrl(post?.link);
+  const externalLinks = useMemo(() => getSafePostLinks(post?.link), [post?.link]);
   const eventDate = formatDate(post?.eventDate);
 
   useEffect(() => {
@@ -500,12 +501,15 @@ export default function PostDetail() {
               value={post.location}
               icon="location-outline"
             />
-            <InfoRow
-              label="Link"
-              value={externalUrl}
-              icon="link-outline"
-              onPress={externalUrl ? () => openUrl(externalUrl) : undefined}
-            />
+            {externalLinks.map((link, index) => (
+              <InfoRow
+                key={`${link}-${index}`}
+                label={externalLinks.length > 1 ? `Link ${index + 1}` : "Link"}
+                value={formatPostLinkLabel(link)}
+                icon="link-outline"
+                onPress={() => openUrl(link)}
+              />
+            ))}
           </View>
         </ScrollView>
       )}

@@ -7,8 +7,8 @@ import { Post } from "@/types/api";
 import {
   getAbsoluteMediaUrl,
   getPostMediaType,
-  getSafeExternalUrl,
 } from "@/utils/media";
+import { formatPostLinkLabel, getSafePostLinks } from "@/utils/postLinks";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { memo, useMemo, useState } from "react";
@@ -94,7 +94,7 @@ function PostCard({
     [item?.mainImage],
   );
   const mediaType = getPostMediaType(item);
-  const externalUrl = getSafeExternalUrl(item?.link);
+  const externalLinks = useMemo(() => getSafePostLinks(item?.link), [item?.link]);
   const postedTime = timeAgo(item?.postedDate || item?.createdAt);
   const location = cleanLocation(item?.location);
   const eventDate = formatDate(item?.eventDate);
@@ -165,11 +165,10 @@ function PostCard({
     toggleFavorite(item);
   };
 
-  const openExternalLink = async () => {
-    if (!externalUrl) return;
-    const supported = await Linking.canOpenURL(externalUrl);
+  const openExternalLink = async (url: string) => {
+    const supported = await Linking.canOpenURL(url);
     if (supported) {
-      await Linking.openURL(externalUrl);
+      await Linking.openURL(url);
     }
   };
 
@@ -273,17 +272,29 @@ function PostCard({
             {item?.description || "No description"}
           </Text>
 
-          {externalUrl ? (
-            <TouchableOpacity
-              activeOpacity={0.75}
-              style={styles.linkRow}
-              onPress={openExternalLink}
-            >
-              <Ionicons name="open-outline" size={15} color="#60a5fa" />
-              <Text style={styles.linkText} numberOfLines={1}>
-                {externalUrl}
-              </Text>
-            </TouchableOpacity>
+          {externalLinks.length > 0 ? (
+            <View style={styles.linksSection}>
+              <View style={styles.linksHeader}>
+                <Ionicons name="link-outline" size={14} color="#93c5fd" />
+                <Text style={styles.linksTitle}>
+                  {externalLinks.length > 1 ? "Links" : "Link"}
+                </Text>
+              </View>
+
+              {externalLinks.map((link, index) => (
+                <TouchableOpacity
+                  key={`${link}-${index}`}
+                  activeOpacity={0.75}
+                  style={styles.linkRow}
+                  onPress={() => openExternalLink(link)}
+                >
+                  <Ionicons name="open-outline" size={15} color="#60a5fa" />
+                  <Text style={styles.linkText} numberOfLines={2}>
+                    {formatPostLinkLabel(link)}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
           ) : null}
 
           {item?.location || eventDate || item?.eventTime ? (
@@ -441,7 +452,30 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    marginTop: 10,
+    borderRadius: 10,
+    backgroundColor: "rgba(96,165,250,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(147,197,253,0.16)",
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    minHeight: 28,
+  },
+  linksSection: {
+    gap: 6,
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.08)",
+  },
+  linksHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  linksTitle: {
+    fontSize: 12,
+    color: "#bfdbfe",
+    fontWeight: "700",
   },
   linkText: {
     flex: 1,

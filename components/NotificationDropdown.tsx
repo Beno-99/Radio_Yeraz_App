@@ -9,12 +9,13 @@ import {
 } from "@/utils/notificationPayload";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
   Modal,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -72,26 +73,46 @@ export default function NotificationDropdown({
   onMarkRead,
 }: Props) {
   const insets = useSafeAreaInsets();
-  const { notifications } = useNotificationStore();
+  const { notifications, pruneExpired } = useNotificationStore();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-20)).current;
+  const [selectedNotification, setSelectedNotification] =
+    useState<AppNotification | null>(null);
+
+  const closeDetail = () => {
+    setSelectedNotification(null);
+  };
+
+  const handleRequestClose = () => {
+    if (selectedNotification) {
+      closeDetail();
+      return;
+    }
+
+    onClose();
+  };
 
   const handleNotificationPress = (item: AppNotification) => {
     onMarkRead?.(item.id || item._id || "");
-    onClose();
 
     const postId = getPostIdFromNotificationData(item.data);
 
     if (postId) {
+      onClose();
       router.replace({
         pathname: "/post/[id]",
         params: { id: postId },
       });
+      return;
     }
+
+    setSelectedNotification(item);
   };
 
   useEffect(() => {
     if (visible) {
+      pruneExpired();
+
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -107,8 +128,9 @@ export default function NotificationDropdown({
     } else {
       fadeAnim.setValue(0);
       slideAnim.setValue(-20);
+      setSelectedNotification(null);
     }
-  }, [fadeAnim, slideAnim, visible]);
+  }, [fadeAnim, pruneExpired, slideAnim, visible]);
 
   const renderItem = ({ item }: { item: AppNotification }) => {
     const showMessage =
@@ -147,7 +169,7 @@ export default function NotificationDropdown({
       visible={visible}
       transparent
       animationType="none"
-      onRequestClose={onClose}
+      onRequestClose={handleRequestClose}
     >
       <Pressable style={styles.backdrop} onPress={onClose} />
       <Animated.View
@@ -190,6 +212,53 @@ export default function NotificationDropdown({
           />
         )}
       </Animated.View>
+
+      {selectedNotification ? (
+        <View style={styles.detailOverlay}>
+          <Pressable style={styles.detailBackdrop} onPress={closeDetail} />
+          <View style={styles.detailCard}>
+            <View style={styles.detailHeader}>
+              <View style={styles.detailIconShell}>
+                <Ionicons
+                  name={
+                    typeIcon[selectedNotification.type] ||
+                    "notifications-outline"
+                  }
+                  size={22}
+                  color="#e94560"
+                />
+              </View>
+
+              <View style={styles.detailHeading}>
+                <Text style={styles.detailTime}>
+                  {timeAgo(selectedNotification.createdAt)}
+                </Text>
+                <Text style={styles.detailTitle}>
+                  {selectedNotification.title}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.detailClose}
+                onPress={closeDetail}
+                activeOpacity={0.7}
+              >
+                <Ionicons name="close" size={22} color="#d1d5db" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView
+              style={styles.detailScroll}
+              contentContainerStyle={styles.detailScrollContent}
+              showsVerticalScrollIndicator
+            >
+              <Text style={styles.detailMessage}>
+                {selectedNotification.message || "No message content."}
+              </Text>
+            </ScrollView>
+          </View>
+        </View>
+      ) : null}
     </Modal>
   );
 }
@@ -262,5 +331,79 @@ const styles = StyleSheet.create({
     fontSize: 11,
     lineHeight: 16,
     marginBottom: 2,
+  },
+  detailOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 18,
+    zIndex: 20,
+  },
+  detailBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(5,9,18,0.78)",
+  },
+  detailCard: {
+    width: "100%",
+    maxWidth: 430,
+    maxHeight: "78%",
+    backgroundColor: "#171d31",
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+    overflow: "hidden",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.45,
+    shadowRadius: 18,
+    elevation: 14,
+  },
+  detailHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(255,255,255,0.08)",
+  },
+  detailIconShell: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(233,69,96,0.12)",
+  },
+  detailHeading: { flex: 1, minWidth: 0 },
+  detailTime: {
+    color: "#8b93a7",
+    fontSize: 12,
+    marginBottom: 4,
+  },
+  detailTitle: {
+    color: "#fff",
+    fontSize: 17,
+    fontWeight: "800",
+    lineHeight: 23,
+  },
+  detailClose: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  detailScroll: { maxHeight: 420 },
+  detailScrollContent: {
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+  },
+  detailMessage: {
+    color: "#e5e7eb",
+    fontSize: 15,
+    lineHeight: 23,
   },
 });
