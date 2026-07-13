@@ -1,7 +1,13 @@
 // components/EmptyState.tsx - Watermark Logo Style
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-import { Dimensions, Image, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  StyleSheet,
+  Text,
+  useWindowDimensions,
+  View,
+} from "react-native";
 
 interface EmptyStateProps {
   title?: string;
@@ -9,8 +15,6 @@ interface EmptyStateProps {
   logoSource?: { uri: string } | number;
   logoSize?: number;
 }
-
-const { width: screenWidth } = Dimensions.get("window");
 
 const FALLBACK_LOGO = require("@/assets/images/radioLogoOrg.png");
 
@@ -21,6 +25,13 @@ export default function EmptyState({
   logoSize = 120,
 }: EmptyStateProps) {
   const finalLogoSource = logoSource || FALLBACK_LOGO;
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
+  const logoDimension = Math.min(
+    logoSize * (isLandscape ? 1.55 : 2.2),
+    width * (isLandscape ? 0.24 : 0.5),
+    height * (isLandscape ? 0.46 : 0.38),
+  );
 
   return (
     <View style={styles.container}>
@@ -34,18 +45,39 @@ export default function EmptyState({
       />
 
       {/* Large watermark logo - center & subtle */}
-      <View style={styles.logoContainer}>
+      <View
+        style={[
+          styles.logoContainer,
+          isLandscape && styles.logoContainerLandscape,
+        ]}
+      >
         <Image
           source={finalLogoSource}
-          style={styles.watermarkLogo}
+          style={[
+            styles.watermarkLogo,
+            {
+              width: logoDimension,
+              height: logoDimension,
+            },
+          ]}
           resizeMode="contain"
         />
       </View>
 
       {/* Clean text content */}
-      <View style={styles.content}>
-        <Text style={styles.title}>{title}</Text>
-        <Text style={styles.subtitle}>{subtitle}</Text>
+      <View style={[styles.content, isLandscape && styles.contentLandscape]}>
+        <Text style={[styles.title, isLandscape && styles.titleLandscape]}>
+          {title}
+        </Text>
+        <Text
+          style={[
+            styles.subtitle,
+            isLandscape && styles.subtitleLandscape,
+            { maxWidth: Math.min(width * 0.8, 520) },
+          ]}
+        >
+          {subtitle}
+        </Text>
       </View>
     </View>
   );
@@ -64,9 +96,11 @@ const styles = StyleSheet.create({
     right: 20,
     alignItems: "center",
   },
+  logoContainerLandscape: {
+    top: "10%",
+    right: 0,
+  },
   watermarkLogo: {
-    width: screenWidth * 0.5,
-    height: screenWidth * 0.5,
     opacity: 0.2, // Subtle watermark effect
   },
   content: {
@@ -74,6 +108,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 40,
     paddingVertical: 80,
     gap: 16,
+  },
+  contentLandscape: {
+    paddingVertical: 36,
+    gap: 10,
   },
   title: {
     fontSize: 32,
@@ -83,12 +121,19 @@ const styles = StyleSheet.create({
     letterSpacing: -0.8,
     lineHeight: 36,
   },
+  titleLandscape: {
+    fontSize: 24,
+    lineHeight: 28,
+  },
   subtitle: {
     fontSize: 18,
     fontWeight: "500",
     color: "#cbd5e1",
     textAlign: "center",
     lineHeight: 24,
-    maxWidth: screenWidth * 0.8,
+  },
+  subtitleLandscape: {
+    fontSize: 14,
+    lineHeight: 20,
   },
 });

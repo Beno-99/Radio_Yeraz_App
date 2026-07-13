@@ -1,5 +1,7 @@
 import PostLiveBadge from "@/components/PostLiveBadge";
 import PostMediaPreview from "@/components/PostMediaPreview";
+import { useFavoritePostsStore } from "@/stores/favoritePostsStore";
+import { useVideoProgress } from "@/stores/videoProgressStore";
 import ZoomableImage from "@/components/ZoomableImage";
 import { Post } from "@/types/api";
 import {
@@ -25,14 +27,12 @@ import {
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 const MOBILE_MEDIA_ASPECT_RATIO = 4 / 3;
-const DESKTOP_MEDIA_ASPECT_RATIO = 16 / 9;
+const VIDEO_MEDIA_ASPECT_RATIO = 16 / 9;
 
 type PostCardProps = {
   item: Post;
   openMedia?: (item: Post) => void;
-  isVisible?: boolean;
   isScrolling?: boolean;
-  isRefreshing?: boolean;
   returnVideoTime?: number;
 };
 
@@ -54,7 +54,10 @@ const timeAgo = (date?: string | null) => {
 
 const cleanLocation = (location?: string | null) => {
   if (!location) return "Aleppo-Syria";
-  const parts = location.split(",").map((part) => part.trim()).filter(Boolean);
+  const parts = location
+    .split(",")
+    .map((part) => part.trim())
+    .filter(Boolean);
   if (parts.length === 0) return "Aleppo-Syria";
   return parts[parts.length - 1];
 };
@@ -71,12 +74,21 @@ const formatDate = (date?: string | null) => {
   });
 };
 
-function PostCard({ item, openMedia }: PostCardProps) {
-  const { width: screenWidth } = useWindowDimensions();
+function PostCard({
+  item,
+  openMedia,
+  isScrolling = false,
+  returnVideoTime = 0,
+}: PostCardProps) {
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const router = useRouter();
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
 
   const postId = String(item?._id || item?.id || "");
+  const isFavorite = useFavoritePostsStore((state) =>
+    Boolean(postId && state.favorites[postId]),
+  );
+  const toggleFavorite = useFavoritePostsStore((state) => state.toggleFavorite);
   const imageUri = useMemo(
     () => getAbsoluteMediaUrl(item?.mainImage),
     [item?.mainImage],
@@ -88,25 +100,53 @@ function PostCard({ item, openMedia }: PostCardProps) {
   const eventDate = formatDate(item?.eventDate);
 
   const isCompact = screenWidth < 360;
+  const isLandscape = screenWidth > screenHeight;
   const isTablet = screenWidth >= 768;
   const isDesktopWeb = Platform.OS === "web" && screenWidth >= 1024;
+  const landscapeCardWidth = Math.min(screenWidth - 48, 660);
 
-  const cardMaxWidth = isDesktopWeb ? 680 : isTablet ? 620 : undefined;
-  const avatarSize = isCompact ? 38 : isTablet ? 50 : 44;
-  const headerPadding = isCompact ? 10 : isTablet ? 14 : 12;
-  const contentPadding = isCompact ? 12 : isTablet ? 18 : 16;
-  const titleSize = isCompact ? 16 : isTablet ? 20 : 18;
-  const descriptionSize = isCompact ? 14 : 15;
-  const mediaAspectRatio = isDesktopWeb
-    ? DESKTOP_MEDIA_ASPECT_RATIO
-    : MOBILE_MEDIA_ASPECT_RATIO;
-  const mediaMaxHeight = isDesktopWeb ? 420 : screenWidth * 1.05;
+  const cardMaxWidth = isDesktopWeb
+    ? 680
+    : isLandscape
+      ? landscapeCardWidth
+      : isTablet
+        ? 620
+        : undefined;
+  const avatarSize = isCompact ? 38 : isLandscape ? 42 : isTablet ? 50 : 44;
+  const headerPadding = isCompact ? 10 : isLandscape ? 10 : isTablet ? 14 : 12;
+  const contentPadding = isCompact ? 12 : isLandscape ? 12 : isTablet ? 18 : 16;
+  const titleSize = isCompact ? 16 : isLandscape ? 18 : isTablet ? 20 : 18;
+  const descriptionSize = isCompact || isLandscape ? 14 : 15;
+  const isVideoMedia = mediaType === "youtube" || mediaType === "facebook";
+  const mediaAspectRatio =
+    isVideoMedia || isDesktopWeb || isLandscape
+      ? VIDEO_MEDIA_ASPECT_RATIO
+      : MOBILE_MEDIA_ASPECT_RATIO;
+  const mediaMaxHeight = isDesktopWeb
+    ? 420
+    : isLandscape
+      ? Math.min(280, Math.max(210, screenHeight * 0.56))
+      : screenWidth * 1.05;
+  const mediaFrameStyle = isLandscape
+    ? {
+        height: mediaMaxHeight,
+      }
+    : {
+        aspectRatio: mediaAspectRatio,
+        maxHeight: mediaMaxHeight,
+      };
 
   const openPostDetail = () => {
     if (!postId || postId === "[id]") return;
+    const videoTime = Math.floor(
+      useVideoProgress.getState().getProgress(postId),
+    );
     router.push({
       pathname: "/post/[id]",
-      params: { id: postId },
+      params: {
+        id: postId,
+        startTime: videoTime > 0 ? String(videoTime) : undefined,
+      },
     });
   };
 
@@ -118,6 +158,11 @@ function PostCard({ item, openMedia }: PostCardProps) {
     }
 
     openPostDetail();
+  };
+
+  const handleFavoritePress = () => {
+    if (!postId) return;
+    toggleFavorite(item);
   };
 
   const openExternalLink = async () => {
@@ -135,6 +180,7 @@ function PostCard({ item, openMedia }: PostCardProps) {
           styles.card,
           { maxWidth: cardMaxWidth },
           isCompact && styles.cardCompact,
+          isLandscape && styles.cardLandscape,
         ]}
       >
         <View style={[styles.profileHeader, { padding: headerPadding }]}>
@@ -166,20 +212,49 @@ function PostCard({ item, openMedia }: PostCardProps) {
             </View>
           </View>
 
-          <PostLiveBadge
-            liveStatus={item?.liveStatus}
-            isLive={item?.isLive}
-            style={styles.headerBadge}
-          />
+          <View style={styles.headerActions}>
+            <PostLiveBadge
+              liveStatus={item?.liveStatus}
+              isLive={item?.isLive}
+              style={styles.headerBadge}
+            />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={
+                isFavorite ? "Remove from favorites" : "Add to favorites"
+              }
+              style={({ pressed }) => [
+                styles.favoriteButton,
+                isFavorite && styles.favoriteButtonActive,
+                pressed && styles.favoriteButtonPressed,
+              ]}
+              onPress={handleFavoritePress}
+              hitSlop={8}
+            >
+              <Ionicons
+                name={isFavorite ? "heart" : "heart-outline"}
+                size={20}
+                color={isFavorite ? "#fff" : "#fda4af"}
+              />
+            </Pressable>
+          </View>
         </View>
 
         {mediaType !== "none" ? (
           <PostMediaPreview
             post={item}
             onPress={handleMediaPress}
+            isScrolling={isScrolling}
+            startTime={
+              returnVideoTime || useVideoProgress.getState().getProgress(postId)
+            }
+            onVideoProgress={(seconds) =>
+              useVideoProgress.getState().setProgress(postId, seconds)
+            }
             style={[
               styles.mediaContainer,
-              { aspectRatio: mediaAspectRatio, maxHeight: mediaMaxHeight },
+              mediaFrameStyle,
+              isLandscape && styles.mediaContainerLandscape,
             ]}
           />
         ) : null}
@@ -193,7 +268,7 @@ function PostCard({ item, openMedia }: PostCardProps) {
 
           <Text
             style={[styles.description, { fontSize: descriptionSize }]}
-            numberOfLines={4}
+            numberOfLines={isLandscape ? 2 : 4}
           >
             {item?.description || "No description"}
           </Text>
@@ -277,6 +352,10 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     marginBottom: 14,
   },
+  cardLandscape: {
+    borderRadius: 14,
+    marginBottom: 14,
+  },
   profileHeader: {
     flexDirection: "row",
     alignItems: "center",
@@ -311,12 +390,38 @@ const styles = StyleSheet.create({
     color: "#ffffff",
   },
   headerBadge: {
+    flexShrink: 0,
+  },
+  headerActions: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     marginLeft: 8,
+  },
+  favoriteButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.12)",
+  },
+  favoriteButtonActive: {
+    backgroundColor: "#e94560",
+    borderColor: "#fb7185",
+  },
+  favoriteButtonPressed: {
+    opacity: 0.72,
   },
   mediaContainer: {
     width: "100%",
     overflow: "hidden",
     backgroundColor: "transparent",
+  },
+  mediaContainerLandscape: {
+    minHeight: 210,
   },
   cardContent: {
     padding: 16,
@@ -346,7 +451,7 @@ const styles = StyleSheet.create({
   },
   viewerBackdrop: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.95)",
+    backgroundColor: "#000",
     justifyContent: "center",
     alignItems: "center",
   },

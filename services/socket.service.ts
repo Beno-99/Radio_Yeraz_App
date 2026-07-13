@@ -1,24 +1,30 @@
 // services/socket.service.ts
-import { API_ORIGIN } from "@/services/mobileApi";
+import { SOCKET_URL } from "@/services/mobileApi";
 import { io, Socket } from "socket.io-client";
-
-const SOCKET_URL = API_ORIGIN;
 
 class SocketService {
   private socket: Socket | null = null;
   private listeners: Map<string, Set<Function>> = new Map();
+  private connectionRefs = 0;
 
   connect() {
-    if (this.socket?.connected) return;
+    this.connectionRefs += 1;
+    if (this.socket) return;
 
     this.socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 2000,
+      timeout: 10000,
     });
 
     this.socket.on("connect", () => {
+      console.log(
+        "Socket connected:",
+        this.socket?.id,
+        this.socket?.io.engine.transport.name,
+      );
       this.socket?.emit("get_notifications");
     });
 
@@ -48,6 +54,9 @@ class SocketService {
   }
 
   disconnect() {
+    this.connectionRefs = Math.max(0, this.connectionRefs - 1);
+    if (this.connectionRefs > 0) return;
+
     this.socket?.disconnect();
     this.socket = null;
   }

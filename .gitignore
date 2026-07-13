@@ -42,3 +42,15 @@ app-example
 # generated native folders
 /ios
 /android
+
+# local build/test artifacts
+.gradle-home*/
+/*.png
+/*.log
+/*.out.log
+/*.err.log
+/gradle-*.log
+/metro-*.headers.txt
+/metro-manifest.json
+/media_session*.txt
+/notification_*.txt

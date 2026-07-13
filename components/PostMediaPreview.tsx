@@ -4,8 +4,9 @@ import {
   getYouTubeThumbnail,
   getYouTubeVideoId,
 } from "@/utils/media";
+import YouTubePlayer from "@/components/YouTubePlayer";
 import { Ionicons } from "@expo/vector-icons";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Image,
   ImageResizeMode,
@@ -22,6 +23,9 @@ type MediaPost = Parameters<typeof getPostMediaType>[0];
 type Props = {
   post: MediaPost;
   onPress?: () => void;
+  isScrolling?: boolean;
+  startTime?: number;
+  onVideoProgress?: (seconds: number) => void;
   style?: StyleProp<ViewStyle>;
   resizeMode?: ImageResizeMode;
 };
@@ -29,16 +33,21 @@ type Props = {
 export default function PostMediaPreview({
   post,
   onPress,
+  isScrolling = false,
+  startTime = 0,
+  onVideoProgress,
   style,
   resizeMode = "cover",
 }: Props) {
   const [imageFailed, setImageFailed] = useState(false);
+  const [youtubePlaying, setYoutubePlaying] = useState(false);
+  const [youtubeEmbedFailed, setYoutubeEmbedFailed] = useState(false);
   const mediaType = getPostMediaType(post);
+  const youtubeVideoId = getYouTubeVideoId(post?.youtubeVideoId, post?.youtubeUrl);
 
   const mediaUri = useMemo(() => {
     if (mediaType === "youtube") {
-      const videoId = getYouTubeVideoId(post?.youtubeVideoId, post?.youtubeUrl);
-      return getYouTubeThumbnail(videoId);
+      return getYouTubeThumbnail(youtubeVideoId, "wide");
     }
 
     if (mediaType === "image") {
@@ -46,9 +55,47 @@ export default function PostMediaPreview({
     }
 
     return undefined;
-  }, [mediaType, post?.mainImage, post?.youtubeUrl, post?.youtubeVideoId]);
+  }, [mediaType, post?.mainImage, youtubeVideoId]);
+
+  useEffect(() => {
+    setYoutubePlaying(false);
+    setYoutubeEmbedFailed(false);
+  }, [youtubeVideoId]);
+
+  useEffect(() => {
+    if (!youtubePlaying || !isScrolling) return;
+
+    const timeout = setTimeout(() => {
+      setYoutubePlaying(false);
+    }, 900);
+
+    return () => clearTimeout(timeout);
+  }, [isScrolling, youtubePlaying]);
+
+  const handlePress = () => {
+    if (mediaType === "youtube") {
+      setYoutubeEmbedFailed(false);
+      setYoutubePlaying(true);
+      return;
+    }
+
+    onPress?.();
+  };
 
   const content = (() => {
+    if (mediaType === "youtube" && youtubePlaying && youtubeVideoId && !youtubeEmbedFailed) {
+      return (
+        <YouTubePlayer
+          videoId={youtubeVideoId}
+          startTime={startTime}
+          autoplay
+          onProgress={onVideoProgress}
+          onEnded={() => onVideoProgress?.(0)}
+          onError={() => setYoutubeEmbedFailed(true)}
+        />
+      );
+    }
+
     if ((mediaType === "image" || mediaType === "youtube") && mediaUri && !imageFailed) {
       return (
         <>
@@ -88,10 +135,18 @@ export default function PostMediaPreview({
 
   if (mediaType === "none") return null;
 
+  if (mediaType === "youtube" && youtubePlaying) {
+    return (
+      <View style={[styles.container, style]}>
+        {content}
+      </View>
+    );
+  }
+
   return (
     <Pressable
-      disabled={!onPress}
-      onPress={onPress}
+      disabled={!onPress && mediaType !== "youtube"}
+      onPress={handlePress}
       style={[styles.container, style]}
     >
       {content}
@@ -109,6 +164,10 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
+  },
+  webView: {
+    flex: 1,
+    backgroundColor: "#000",
   },
   playOverlay: {
     ...StyleSheet.absoluteFillObject,

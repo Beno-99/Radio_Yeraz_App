@@ -1,6 +1,6 @@
 {
   "name": "radioyeraz",
-  "main": "expo-router/entry",
+  "main": "index.js",
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
@@ -69,6 +69,15 @@
     "eslint-config-expo": "~10.0.0",
     "patch-package": "^8.0.1",
     "typescript": "~5.9.2"
+  },
+  "expo": {
+    "autolinking": {
+      "android": {
+        "buildFromSource": [
+          "expo-audio"
+        ]
+      }
+    }
   },
   "private": true
 }

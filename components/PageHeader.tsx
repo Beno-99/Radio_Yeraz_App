@@ -3,7 +3,14 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
-import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import NotificationDropdown from "./NotificationDropdown";
 
@@ -15,9 +22,11 @@ export default function PageHeader({
   onNotificationPress?: (postId: string) => void;
 }) {
   const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
   const [showDropdown, setShowDropdown] = useState(false);
   const { unreadCount } = useNotificationStore();
-  const { markAllRead, markRead } = useNotifications();
+  const { markAllRead, markRead } = useNotifications({ listen: false });
 
   return (
     <>
@@ -25,22 +34,40 @@ export default function PageHeader({
         The 'innerHeader' handles the actual content with a fixed height.
       */}
       <View style={[styles.headerContainer, { paddingTop: insets.top }]}>
-        <View style={styles.innerHeader}>
+        <View
+          style={[
+            styles.innerHeader,
+            isLandscape && styles.innerHeaderLandscape,
+          ]}
+        >
           <Image
             source={require("@/assets/images/radioLogoOrg.png")}
-            style={styles.logo}
+            style={[styles.logo, isLandscape && styles.logoLandscape]}
             resizeMode="contain"
           />
 
-          <Text style={styles.headerTitle} numberOfLines={1}>
+          <Text
+            style={[
+              styles.headerTitle,
+              isLandscape && styles.headerTitleLandscape,
+            ]}
+            numberOfLines={1}
+          >
             {title}
           </Text>
 
           <TouchableOpacity
-            style={styles.notificationBell}
+            style={[
+              styles.notificationBell,
+              isLandscape && styles.notificationBellLandscape,
+            ]}
             onPress={() => setShowDropdown(true)}
           >
-            <Ionicons name="notifications-outline" size={20} color="#e94560" />
+            <Ionicons
+              name="notifications-outline"
+              size={isLandscape ? 18 : 20}
+              color="#e94560"
+            />
             {unreadCount > 0 && (
               <View style={styles.badge}>
                 <Text style={styles.badgeText}>
@@ -76,6 +103,10 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
   },
+  innerHeaderLandscape: {
+    height: 44,
+    paddingHorizontal: 14,
+  },
   headerTitle: {
     fontSize: 17,
     fontWeight: "700",
@@ -84,14 +115,25 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginHorizontal: 8,
   },
+  headerTitleLandscape: {
+    fontSize: 15,
+  },
   logo: {
     width: 70, // Reduced from 90
     height: 65, // Reduced from 66 to keep header slim
+  },
+  logoLandscape: {
+    width: 54,
+    height: 42,
   },
   notificationBell: {
     padding: 8,
     borderRadius: 20,
     backgroundColor: "rgba(233,69,96,0.1)",
+  },
+  notificationBellLandscape: {
+    padding: 7,
+    borderRadius: 18,
   },
   badge: {
     position: "absolute",

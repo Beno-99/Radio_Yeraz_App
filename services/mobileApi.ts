@@ -1,20 +1,31 @@
 import axios, { AxiosError } from "axios";
 
 const DEFAULT_API_URL = "https://api.radioyeraz.com/api";
+const DEFAULT_MEDIA_URL = "https://api.radioyeraz.com";
+const DEFAULT_SOCKET_URL = "https://api.radioyeraz.com";
 const REQUEST_TIMEOUT_MS = 15000;
+const MOBILE_USER_AGENT =
+  "RadioYeraz/1.0 (Android; React Native) Mobile";
 
 const trimTrailingSlash = (value: string) => value.replace(/\/+$/, "");
 
-const resolveApiUrl = () => {
-  const configured = process.env.EXPO_PUBLIC_API_URL || DEFAULT_API_URL;
+const resolvePublicUrl = (
+  configured: string | undefined,
+  fallback: string,
+  label: string,
+) => {
+  const normalized = trimTrailingSlash(configured || fallback);
 
-  const normalized = trimTrailingSlash(configured);
-
-  if (!normalized.startsWith("https://")) {
-    console.warn("API URL should use HTTPS in production.");
+  try {
+    const parsed = new URL(normalized);
+    if (parsed.protocol !== "https:") {
+      console.warn(`${label} should use HTTPS in production.`);
+    }
+    return normalized;
+  } catch {
+    console.warn(`${label} is invalid. Falling back to ${fallback}.`);
+    return fallback;
   }
-
-  return normalized;
 };
 
 const resolveApiOrigin = (apiUrl: string) => {
@@ -25,9 +36,23 @@ const resolveApiOrigin = (apiUrl: string) => {
   }
 };
 
-export const API_URL = resolveApiUrl();
+export const API_URL = resolvePublicUrl(
+  process.env.EXPO_PUBLIC_API_URL,
+  DEFAULT_API_URL,
+  "API URL",
+);
 export const API_ORIGIN = resolveApiOrigin(API_URL);
-export const IMAGE_URL = API_ORIGIN;
+export const MEDIA_URL = resolvePublicUrl(
+  process.env.EXPO_PUBLIC_MEDIA_URL,
+  DEFAULT_MEDIA_URL,
+  "Media URL",
+);
+export const IMAGE_URL = MEDIA_URL;
+export const SOCKET_URL = resolvePublicUrl(
+  process.env.EXPO_PUBLIC_SOCKET_URL,
+  DEFAULT_SOCKET_URL,
+  "Socket URL",
+);
 
 export type MobileApiErrorCode =
   | "timeout"
@@ -54,6 +79,9 @@ export const mobileApi = axios.create({
   headers: {
     "Content-Type": "application/json",
     Accept: "application/json",
+    "Accept-Language": "en-US,en;q=0.9",
+    "User-Agent": MOBILE_USER_AGENT,
+    "X-Requested-With": "com.radioyeraz.radioyeraz",
   },
 });
 
@@ -115,7 +143,44 @@ export function extractApiArray<T>(payload: unknown): T[] {
   return [];
 }
 
+function getMessageOnlyResponseError(responseData: unknown) {
+  if (!responseData || typeof responseData !== "object" || Array.isArray(responseData)) {
+    return null;
+  }
+
+  const record = responseData as {
+    data?: unknown;
+    posts?: unknown;
+    items?: unknown;
+    value?: unknown;
+    success?: unknown;
+    message?: unknown;
+  };
+
+  const hasArrayPayload =
+    Array.isArray(record.data) ||
+    Array.isArray(record.posts) ||
+    Array.isArray(record.items) ||
+    Array.isArray(record.value);
+
+  if (hasArrayPayload || record.success === true || typeof record.message !== "string") {
+    return null;
+  }
+
+  return record.message;
+}
+
 mobileApi.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    const messageOnlyError = getMessageOnlyResponseError(response.data);
+
+    if (messageOnlyError) {
+      return Promise.reject(
+        new MobileApiError(messageOnlyError, "server", response.status),
+      );
+    }
+
+    return response;
+  },
   (error) => Promise.reject(normalizeApiError(error)),
 );

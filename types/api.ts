@@ -92,6 +92,10 @@ export interface StreamLink {
   url: string;
   description: string | null;
   isActive: boolean;
+  bitrate?: number | string | null;
+  displayOrder?: number | null;
+  metadataUrl?: string | null;
+  metaUrl?: string | null;
   createdAt: string;
   updatedAt: string;
   __v?: number;

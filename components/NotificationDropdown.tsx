@@ -4,6 +4,10 @@ import {
   AppNotification,
   useNotificationStore,
 } from "@/stores/notificationStore";
+import {
+  getPostIdFromNotificationData,
+  isLivePostNotificationType,
+} from "@/utils/notificationPayload";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
@@ -35,6 +39,8 @@ const timeAgo = (dateStr: string) => {
 
 const typeIcon: Record<string, keyof typeof Ionicons.glyphMap> = {
   NEW_POST: "megaphone-outline",
+  POST_LIVE: "radio-outline",
+  POST_STARTED_LIVE: "radio-outline",
   POST_UPDATED: "create-outline",
   POST_DELETED: "trash-outline",
   POST_PUBLISHED: "checkmark-circle-outline",
@@ -44,6 +50,8 @@ const typeIcon: Record<string, keyof typeof Ionicons.glyphMap> = {
   CAROUSEL_DELETED: "trash-outline",
   CAROUSEL_TOGGLED: "sync-outline",
 };
+
+const messageTypes = new Set(["EVENT_REMINDER", "NEW_POST", "POST_PUBLISHED"]);
 
 interface Props {
   visible: boolean;
@@ -70,8 +78,9 @@ export default function NotificationDropdown({
     onMarkRead?.(item.id || item._id || "");
     onClose();
 
-    if (item.data?.postId) {
-      const postId = String(item.data.postId);
+    const postId = getPostIdFromNotificationData(item.data);
+
+    if (postId) {
       onNotificationPress?.(postId);
       setTargetPostId(postId);
       router.push({
@@ -103,9 +112,7 @@ export default function NotificationDropdown({
 
   const renderItem = ({ item }: { item: AppNotification }) => {
     const showMessage =
-      item.type === "EVENT_REMINDER" ||
-      item.type === "NEW_POST" ||
-      item.type === "POST_PUBLISHED";
+      messageTypes.has(item.type) || isLivePostNotificationType(item.type);
 
     return (
       <TouchableOpacity

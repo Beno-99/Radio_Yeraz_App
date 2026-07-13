@@ -1,11 +1,11 @@
 import EmptyState from "@/components/EmptyState";
+import MarbleBackground from "@/components/MarbleBackground";
 import PageHeader from "@/components/PageHeader";
 import PostCard from "@/components/PostCard";
 import { usePosts } from "@/hooks/usePosts";
 import { useNavigationStore } from "@/stores/navigationStore";
 import { Post } from "@/types/api";
-import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams } from "expo-router";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -14,11 +14,14 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 
 export default function Posts() {
   const { posts, loading, refreshing, error, onRefresh, refetch } = usePosts();
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
   const flatListRef = useRef<FlatList>(null);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { targetPostId, setTargetPostId } = useNavigationStore();
@@ -29,6 +32,12 @@ export default function Posts() {
     returnPostId?: string;
     returnVideoTime?: string;
   }>();
+
+  useFocusEffect(
+    useCallback(() => {
+      refetch(true);
+    }, [refetch]),
+  );
 
   useEffect(() => {
     if (!targetPostId || posts.length === 0) return;
@@ -53,9 +62,11 @@ export default function Posts() {
     }
   }, [targetPostId, posts, setTargetPostId]);
 
-  const openMedia = useCallback((item: Post) => {
-    console.log("open media", item);
+  const getPostKey = useCallback((item?: Post | null) => {
+    return String(item?._id || item?.id || "");
   }, []);
+
+  const openMedia = useCallback((_item: Post) => {}, []);
 
   const handleScrollStart = useCallback(() => {
     setIsScrolling(true);
@@ -84,26 +95,21 @@ export default function Posts() {
   }, []);
 
   const renderItem = useCallback(
-    ({ item }: { item: Post }) => (
-      <PostCard
-        item={item}
-        openMedia={openMedia}
-        isScrolling={isScrolling}
-        isRefreshing={refreshing}
-        returnVideoTime={
-          params.returnPostId === String(item._id)
-            ? Number(params.returnVideoTime || 0)
-            : 0
-        }
-      />
-    ),
-    [
-      openMedia,
-      isScrolling,
-      refreshing,
-      params.returnPostId,
-      params.returnVideoTime,
-    ],
+    ({ item }: { item: Post }) => {
+      return (
+        <PostCard
+          item={item}
+          openMedia={openMedia}
+          isScrolling={isScrolling}
+          returnVideoTime={
+            params.returnPostId === String(item._id)
+              ? Number(params.returnVideoTime || 0)
+              : 0
+          }
+        />
+      );
+    },
+    [openMedia, isScrolling, params.returnPostId, params.returnVideoTime],
   );
 
   const keyExtractor = useCallback(
@@ -130,12 +136,7 @@ export default function Posts() {
   );
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={["#0a0e17", "#111827", "#0f172a"]}
-        style={StyleSheet.absoluteFill}
-      />
-
+    <MarbleBackground style={styles.container}>
       <PageHeader onNotificationPress={scrollToPost} />
 
       {loading ? (
@@ -188,15 +189,18 @@ export default function Posts() {
               tintColor="#e94560"
             />
           }
-          contentContainerStyle={styles.listContent}
-          removeClippedSubviews
+          contentContainerStyle={[
+            styles.listContent,
+            isLandscape && styles.listContentLandscape,
+          ]}
+          removeClippedSubviews={false}
           maxToRenderPerBatch={4}
           windowSize={5}
           initialNumToRender={3}
           updateCellsBatchingPeriod={50}
         />
       )}
-    </View>
+    </MarbleBackground>
   );
 }
 
@@ -239,5 +243,10 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
     paddingHorizontal: 10,
     paddingTop: 10,
+  },
+  listContentLandscape: {
+    paddingBottom: 72,
+    paddingHorizontal: 18,
+    paddingTop: 8,
   },
 });

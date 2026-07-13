@@ -1,61 +1,31 @@
-import * as Network from "expo-network";
-import React, { useState } from "react";
+import MarbleBackground from "@/components/MarbleBackground";
+import { NetworkContext } from "@/components/NetworkProvider";
+import React, { useContext, useState } from "react";
 import {
-    ActivityIndicator,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 export function OfflineScreen() {
-  //   const { setManualOffline } = useContext(NetworkContext);
+  const { refreshNetworkStatus } = useContext(NetworkContext);
   const [checking, setChecking] = useState(false);
   const [message, setMessage] = useState("");
-
-  // For testing purposes, allows us to force offline mode
-
-  //   const handleRetry = async () => {
-  //     setChecking(true);
-  //     setMessage("");
-
-  //     try {
-  //       await new Promise((resolve) => setTimeout(resolve, 1500));
-  //       const networkState = await Network.getNetworkStateAsync();
-  //       const isOnline =
-  //         networkState.isConnected && networkState.isInternetReachable;
-
-  //       if (isOnline) {
-  //         setMessage("Connected! Reloading...");
-  //         // Wait briefly so user sees the message, then reload
-  //         await new Promise((resolve) => setTimeout(resolve, 800));
-  //         setManualOffline(false); // This triggers the context to re-evaluate and show the app
-  //       } else {
-  //         setMessage("Still offline. Try again.");
-  //       }
-  //     } catch {
-  //       setMessage("Could not check connection.");
-  //     } finally {
-  //       setChecking(false);
-  //     }
-  //   };
 
   const handleRetry = async () => {
     setChecking(true);
     setMessage("");
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      const networkState = await Network.getNetworkStateAsync();
-      const isOnline =
-        networkState.isConnected && networkState.isInternetReachable;
+      const nextStatus = await refreshNetworkStatus();
 
-      if (isOnline) {
+      if (nextStatus === "online") {
         setMessage("Connected!");
-        // We don't need to manually set states anymore;
-        // the NetworkProvider will detect the connection and
-        // automatically remove the OfflineScreen for us.
+      } else if (nextStatus === "checking") {
+        setMessage("Checking connection...");
       } else {
         setMessage("Still offline. Try again.");
       }
@@ -67,7 +37,7 @@ export function OfflineScreen() {
   };
 
   return (
-    <View style={styles.container}>
+    <MarbleBackground style={styles.container}>
       {/* Watermark Logo */}
       <Image
         source={require("@/assets/images/radioLogoOrg.png")}
@@ -116,7 +86,7 @@ export function OfflineScreen() {
           )}
         </TouchableOpacity>
       </View>
-    </View>
+    </MarbleBackground>
   );
 }
 
@@ -125,7 +95,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#0a0e17",
   },
   watermark: {
     position: "absolute",

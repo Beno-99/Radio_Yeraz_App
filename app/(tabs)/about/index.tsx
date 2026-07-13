@@ -1,3 +1,4 @@
+import MarbleBackground from "@/components/MarbleBackground";
 import PageHeader from "@/components/PageHeader";
 import { FontAwesome, FontAwesome5, Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -8,11 +9,19 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 
+const YOUTUBE_CHANNEL_URL =
+  process.env.EXPO_PUBLIC_YOUTUBE_CHANNEL_URL ||
+  "https://youtube.com/@radioyeraz?si=Rf5O_3GbZDeNALgq";
+
 export default function AboutScreen() {
   const year = new Date().getFullYear();
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
+  const socialIconSize = isLandscape ? 19 : 22;
 
   const openLink = async (url: string, fallbackUrl?: string) => {
     try {
@@ -40,13 +49,7 @@ export default function AboutScreen() {
 
   return (
     <View style={styles.container}>
-      <LinearGradient
-        colors={["#0a0e1a", "#0f172a", "#0a0e1a"]}
-        style={StyleSheet.absoluteFill}
-      />
-
-      <View style={styles.decorCircle1} />
-      <View style={styles.decorCircle2} />
+      <MarbleBackground style={StyleSheet.absoluteFill} />
 
       <View style={styles.headerContainer}>
         <PageHeader />
@@ -54,29 +57,54 @@ export default function AboutScreen() {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={[
+          styles.content,
+          isLandscape && styles.contentLandscape,
+        ]}
       >
-        <View style={styles.headerSection}>
+        <View
+          style={[
+            styles.headerSection,
+            isLandscape && styles.headerSectionLandscape,
+          ]}
+        >
           {/* <View style={styles.iconWrapper}>
             <Text style={{ fontSize: 24 }}>📻</Text>
           </View> */}
-          <Text style={styles.title}>About Us</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, isLandscape && styles.titleLandscape]}>
+            About Us
+          </Text>
+          <Text
+            style={[styles.subtitle, isLandscape && styles.subtitleLandscape]}
+          >
             Your gateway to Armenian music, culture, and voice — anytime,
             anywhere.
           </Text>
         </View>
 
-        <View style={styles.socialContainer}>
+        <View
+          style={[
+            styles.socialContainer,
+            isLandscape && styles.socialContainerLandscape,
+          ]}
+        >
           <TouchableOpacity
-            style={[styles.socialButton, { backgroundColor: "#E1306C" }]}
+            style={[
+              styles.socialButton,
+              isLandscape && styles.socialButtonLandscape,
+              { backgroundColor: "#E1306C" },
+            ]}
             onPress={() => openLink("https://instagram.com/radioyeraz")}
           >
-            <FontAwesome name="instagram" size={22} color="white" />
+            <FontAwesome name="instagram" size={socialIconSize} color="white" />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.socialButton, { backgroundColor: "#0088cc" }]}
+            style={[
+              styles.socialButton,
+              isLandscape && styles.socialButtonLandscape,
+              { backgroundColor: "#0088cc" },
+            ]}
             onPress={() =>
               openLink(
                 "tg://resolve?domain=yerazradio",
@@ -84,17 +112,29 @@ export default function AboutScreen() {
               )
             }
           >
-            <FontAwesome5 name="telegram-plane" size={22} color="white" />
+            <FontAwesome5
+              name="telegram-plane"
+              size={socialIconSize}
+              color="white"
+            />
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.socialButton, { backgroundColor: "#25D366" }]}
+            style={[
+              styles.socialButton,
+              isLandscape && styles.socialButtonLandscape,
+              { backgroundColor: "#25D366" },
+            ]}
             onPress={() => openLink("https://wa.me/+963989711422")}
           >
-            <FontAwesome name="whatsapp" size={22} color="white" />
+            <FontAwesome name="whatsapp" size={socialIconSize} color="white" />
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.socialButton, { backgroundColor: "#1877F2" }]}
+            style={[
+              styles.socialButton,
+              isLandscape && styles.socialButtonLandscape,
+              { backgroundColor: "#1877F2" },
+            ]}
             onPress={() =>
               openLink(
                 "fb://facewebmodal/f?href=https://www.facebook.com/share/1DwjDHv9nb/",
@@ -102,74 +142,157 @@ export default function AboutScreen() {
               )
             }
           >
-            <FontAwesome name="facebook" size={22} color="white" />
+            <FontAwesome name="facebook" size={socialIconSize} color="white" />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.socialButton,
+              isLandscape && styles.socialButtonLandscape,
+              { backgroundColor: "#FF0033" },
+            ]}
+            onPress={() => openLink(YOUTUBE_CHANNEL_URL)}
+          >
+            <Ionicons
+              name="logo-youtube"
+              size={isLandscape ? 21 : 24}
+              color="white"
+            />
           </TouchableOpacity>
         </View>
 
-        <LinearGradient
-          colors={["#1e3c72", "#2a5298"]}
-          style={styles.featuredCard}
+        <View
+          style={[styles.infoGrid, isLandscape && styles.infoGridLandscape]}
         >
-          <Text style={styles.cardTitle}>Who We Are</Text>
-          <Text style={styles.cardTextWhite}>
-            We are an Armenian radio station dedicated to bringing you the best
-            of Armenian music, news, and culture. From timeless classics to
-            modern hits, our mission is to connect Armenians around the world
-            and keep our culture alive through sound.
-          </Text>
-        </LinearGradient>
-
-        <View style={styles.infoSection}>
-          <Text style={styles.infoTitle}>Contact & Info</Text>
-
-          <View style={styles.infoRow}>
-            <Ionicons
-              name="location-sharp"
-              size={18}
-              color="#e94560"
-              style={styles.rowIcon}
-            />
-            <Text style={styles.infoText}>Aleppo, Syria</Text>
-          </View>
-
-          <TouchableOpacity
-            style={styles.infoRow}
-            onPress={() => openEmail("radioyerazsupport@gmail.com")}
+          <LinearGradient
+            colors={["#1e3c72", "#2a5298"]}
+            style={[
+              styles.featuredCard,
+              isLandscape && styles.featuredCardLandscape,
+            ]}
           >
-            <Ionicons
-              name="mail"
-              size={18}
-              color="#e94560"
-              style={styles.rowIcon}
-            />
-            <Text style={styles.infoText}>radioyerazsupport@gmail.com</Text>
-          </TouchableOpacity>
+            <Text
+              style={[
+                styles.cardTitle,
+                isLandscape && styles.cardTitleLandscape,
+              ]}
+            >
+              Who We Are{" "}
+            </Text>
+            <Text
+              style={[
+                styles.cardTextWhite,
+                isLandscape && styles.cardTextWhiteLandscape,
+              ]}
+            >
+              Radio Yeraz is a volunteer-led Armenian media team in Syria. We
+              stream live programs, community news, podcasts, and cultural
+              events so our listeners can stay close to Armenian music, stories,
+              and daily life wherever they are.
+            </Text>
+          </LinearGradient>
 
-          <View style={styles.infoRow}>
-            <Ionicons
-              name="code-slash"
-              size={18}
-              color="#e94560"
-              style={styles.rowIcon}
-            />
-            <Text style={styles.infoText}>Developer: Benon Merdkhanian</Text>
-          </View>
-
-          <TouchableOpacity
-            style={styles.infoRow}
-            onPress={() => openEmail("bmerdkhanian@email.com")}
+          <View
+            style={[
+              styles.infoSection,
+              isLandscape && styles.infoSectionLandscape,
+            ]}
           >
-            <Ionicons
-              name="at-circle"
-              size={18}
-              color="#e94560"
-              style={styles.rowIcon}
-            />
-            <Text style={styles.infoText}>bmerdkhanian@email.com</Text>
-          </TouchableOpacity>
+            <Text
+              style={[
+                styles.infoTitle,
+                isLandscape && styles.infoTitleLandscape,
+              ]}
+            >
+              Contact & Info
+            </Text>
+
+            <View
+              style={[styles.infoRow, isLandscape && styles.infoRowLandscape]}
+            >
+              <Ionicons
+                name="location-sharp"
+                size={18}
+                color="#e94560"
+                style={styles.rowIcon}
+              />
+              <Text
+                style={[
+                  styles.infoText,
+                  isLandscape && styles.infoTextLandscape,
+                ]}
+              >
+                Aleppo, Syria
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.infoRow, isLandscape && styles.infoRowLandscape]}
+              onPress={() => openEmail("radioyerazsupport@gmail.com")}
+            >
+              <Ionicons
+                name="mail"
+                size={18}
+                color="#e94560"
+                style={styles.rowIcon}
+              />
+              <Text
+                style={[
+                  styles.infoText,
+                  isLandscape && styles.infoTextLandscape,
+                ]}
+              >
+                radioyerazsupport@gmail.com
+              </Text>
+            </TouchableOpacity>
+
+            <View
+              style={[styles.infoRow, isLandscape && styles.infoRowLandscape]}
+            >
+              <Ionicons
+                name="code-slash"
+                size={18}
+                color="#e94560"
+                style={styles.rowIcon}
+              />
+              <Text
+                style={[
+                  styles.infoText,
+                  isLandscape && styles.infoTextLandscape,
+                ]}
+              >
+                Developer: Benon Merdkhanian
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.infoRow, isLandscape && styles.infoRowLandscape]}
+              onPress={() => openEmail("bmerdkhanian@email.com")}
+            >
+              <Ionicons
+                name="at-circle"
+                size={18}
+                color="#e94560"
+                style={styles.rowIcon}
+              />
+              <Text
+                style={[
+                  styles.infoText,
+                  isLandscape && styles.infoTextLandscape,
+                ]}
+              >
+                bmerdkhanian@email.com
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
-        <View style={styles.footerContainer}>
+        <View
+          style={[
+            styles.footerContainer,
+            isLandscape && styles.footerContainerLandscape,
+          ]}
+        >
           <Text style={styles.footerText}>Developed by Benon Merdkhanian</Text>
           <Text style={styles.footerBrand}>
             © {year} Radio Yeraz. All rights reserved.
@@ -193,28 +316,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 92,
     paddingBottom: 60,
+    width: "100%",
+    maxWidth: 980,
+    alignSelf: "center",
   },
-  decorCircle1: {
-    position: "absolute",
-    width: 300,
-    height: 300,
-    borderRadius: 150,
-    backgroundColor: "rgba(233,69,96,0.06)",
-    top: -80,
-    right: -80,
-  },
-  decorCircle2: {
-    position: "absolute",
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: "rgba(233,69,96,0.04)",
-    bottom: 100,
-    left: -60,
+  contentLandscape: {
+    paddingHorizontal: 24,
+    paddingTop: 72,
+    paddingBottom: 76,
   },
   headerSection: {
     alignItems: "center",
     marginBottom: 20,
+  },
+  headerSectionLandscape: {
+    marginBottom: 6,
   },
   iconWrapper: {
     width: 64,
@@ -233,17 +349,29 @@ const styles = StyleSheet.create({
     color: "#fff",
     marginBottom: 6,
   },
+  titleLandscape: {
+    fontSize: 20,
+    marginBottom: 3,
+  },
   subtitle: {
     fontSize: 14,
     color: "#94a3b8",
     textAlign: "center",
     lineHeight: 20,
   },
+  subtitleLandscape: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
   socialContainer: {
     flexDirection: "row",
     justifyContent: "center",
-    gap: 20,
-    marginBottom: 25,
+    gap: 12,
+    marginBottom: 16,
+  },
+  socialContainerLandscape: {
+    gap: 10,
+    marginBottom: 10,
   },
   socialButton: {
     width: 50,
@@ -253,10 +381,29 @@ const styles = StyleSheet.create({
     alignItems: "center",
     elevation: 5,
   },
+  socialButtonLandscape: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+  },
+  infoGrid: {
+    width: "100%",
+  },
+  infoGridLandscape: {
+    flexDirection: "row",
+    gap: 16,
+    alignItems: "stretch",
+  },
   featuredCard: {
     borderRadius: 20,
     padding: 20,
     marginBottom: 20,
+  },
+  featuredCardLandscape: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 0,
   },
   cardTitle: {
     color: "#fff",
@@ -264,10 +411,18 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     marginBottom: 8,
   },
+  cardTitleLandscape: {
+    fontSize: 15,
+    marginBottom: 6,
+  },
   cardTextWhite: {
     color: "#f8fafc",
     fontSize: 14,
     lineHeight: 22,
+  },
+  cardTextWhiteLandscape: {
+    fontSize: 12,
+    lineHeight: 17,
   },
   infoSection: {
     backgroundColor: "rgba(255,255,255,0.03)",
@@ -277,16 +432,29 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.06)",
     marginBottom: 15,
   },
+  infoSectionLandscape: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 14,
+    marginBottom: 0,
+  },
   infoTitle: {
     color: "#fff",
     fontSize: 16,
     fontWeight: "700",
     marginBottom: 15,
   },
+  infoTitleLandscape: {
+    fontSize: 14,
+    marginBottom: 10,
+  },
   infoRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 12,
+  },
+  infoRowLandscape: {
+    marginBottom: 8,
   },
   rowIcon: {
     marginRight: 12,
@@ -296,10 +464,17 @@ const styles = StyleSheet.create({
     color: "#94a3b8",
     fontSize: 14,
   },
+  infoTextLandscape: {
+    fontSize: 12,
+  },
   footerContainer: {
-    marginTop: -5,
+    marginTop: 10,
     paddingBottom: 20,
     alignItems: "center",
+  },
+  footerContainerLandscape: {
+    marginTop: 18,
+    paddingBottom: 72,
   },
   footerText: {
     color: "#64748b",
