@@ -21,10 +21,11 @@ import {
   getYouTubeVideoId,
 } from "@/utils/media";
 import { Ionicons } from "@expo/vector-icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  BackHandler,
   Image,
   Linking,
   Modal,
@@ -185,6 +186,22 @@ export default function PostDetail() {
     };
   }, [fetchPost]);
 
+  useFocusEffect(
+    useCallback(() => {
+      const subscription = BackHandler.addEventListener(
+        "hardwareBackPress",
+        () => {
+          if (router.canGoBack()) return false;
+
+          router.replace("/(tabs)/posts");
+          return true;
+        },
+      );
+
+      return () => subscription.remove();
+    }, [router]),
+  );
+
   const mediaType = getPostMediaType(post);
   const imageUri = useMemo(
     () => getAbsoluteMediaUrl(post?.mainImage),
@@ -315,6 +332,15 @@ export default function PostDetail() {
     removeFavorite(currentPostId);
   };
 
+  const handleBackPress = useCallback(() => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace("/(tabs)/posts");
+  }, [router]);
+
   return (
     <View style={styles.container}>
       <MarbleBackground style={StyleSheet.absoluteFill} />
@@ -330,7 +356,7 @@ export default function PostDetail() {
           accessibilityLabel="Go back"
           style={styles.navButton}
           activeOpacity={0.78}
-          onPress={() => router.back()}
+          onPress={handleBackPress}
         >
           <Ionicons name="chevron-back" size={24} color="#fff" />
         </TouchableOpacity>

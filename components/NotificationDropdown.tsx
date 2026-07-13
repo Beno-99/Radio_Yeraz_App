@@ -1,5 +1,4 @@
 // components/NotificationDropdown.tsx
-import { useNavigationStore } from "@/stores/navigationStore";
 import {
   AppNotification,
   useNotificationStore,
@@ -58,7 +57,6 @@ interface Props {
   onClose: () => void;
   onMarkAllRead: () => void;
   onMarkRead?: (id: string) => void;
-  onNotificationPress?: (postId: string) => void;
 }
 
 export default function NotificationDropdown({
@@ -66,11 +64,9 @@ export default function NotificationDropdown({
   onClose,
   onMarkAllRead,
   onMarkRead,
-  onNotificationPress,
 }: Props) {
   const insets = useSafeAreaInsets();
   const { notifications } = useNotificationStore();
-  const { setTargetPostId } = useNavigationStore();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-20)).current;
 
@@ -81,9 +77,7 @@ export default function NotificationDropdown({
     const postId = getPostIdFromNotificationData(item.data);
 
     if (postId) {
-      onNotificationPress?.(postId);
-      setTargetPostId(postId);
-      router.push({
+      router.replace({
         pathname: "/post/[id]",
         params: { id: postId },
       });

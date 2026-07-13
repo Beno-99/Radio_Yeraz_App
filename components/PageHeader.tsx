@@ -16,10 +16,8 @@ import NotificationDropdown from "./NotificationDropdown";
 
 export default function PageHeader({
   title,
-  onNotificationPress,
 }: {
   title?: string;
-  onNotificationPress?: (postId: string) => void;
 }) {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
@@ -62,6 +60,8 @@ export default function PageHeader({
               isLandscape && styles.notificationBellLandscape,
             ]}
             onPress={() => setShowDropdown(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Open notifications"
           >
             <Ionicons
               name="notifications-outline"
@@ -84,7 +84,6 @@ export default function PageHeader({
         onClose={() => setShowDropdown(false)}
         onMarkAllRead={markAllRead}
         onMarkRead={markRead}
-        onNotificationPress={onNotificationPress}
       />
     </>
   );

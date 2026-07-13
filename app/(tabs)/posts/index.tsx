@@ -3,7 +3,6 @@ import MarbleBackground from "@/components/MarbleBackground";
 import PageHeader from "@/components/PageHeader";
 import PostCard from "@/components/PostCard";
 import { usePosts } from "@/hooks/usePosts";
-import { useNavigationStore } from "@/stores/navigationStore";
 import { Post } from "@/types/api";
 import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -24,7 +23,6 @@ export default function Posts() {
   const isLandscape = width > height;
   const flatListRef = useRef<FlatList>(null);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const { targetPostId, setTargetPostId } = useNavigationStore();
   const [isScrolling, setIsScrolling] = useState(false);
   const isEmptyState = !loading && !error && posts?.length === 0;
 
@@ -38,29 +36,6 @@ export default function Posts() {
       refetch(true);
     }, [refetch]),
   );
-
-  useEffect(() => {
-    if (!targetPostId || posts.length === 0) return;
-
-    const index = posts.findIndex(
-      (p) =>
-        String(p._id) === String(targetPostId) ||
-        String(p.id) === String(targetPostId),
-    );
-
-    if (index !== -1) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToIndex({
-          index,
-          animated: true,
-          viewPosition: 0,
-        });
-        setTargetPostId(null);
-      }, 500);
-    } else {
-      setTargetPostId(null);
-    }
-  }, [targetPostId, posts, setTargetPostId]);
 
   const getPostKey = useCallback((item?: Post | null) => {
     return String(item?._id || item?.id || "");
@@ -118,26 +93,9 @@ export default function Posts() {
     [],
   );
 
-  const scrollToPost = useCallback(
-    (postId: string) => {
-      const index = posts.findIndex(
-        (p) =>
-          String(p._id) === String(postId) || String(p.id) === String(postId),
-      );
-      if (index !== -1 && flatListRef.current) {
-        flatListRef.current.scrollToIndex({
-          index,
-          animated: true,
-          viewPosition: 0,
-        });
-      }
-    },
-    [posts],
-  );
-
   return (
     <MarbleBackground style={styles.container}>
-      <PageHeader onNotificationPress={scrollToPost} />
+      <PageHeader />
 
       {loading ? (
         <ActivityIndicator

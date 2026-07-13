@@ -22,6 +22,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 const APP_BACKGROUND = "#070b14";
 const POST_ID_KEYS = ["postId", "post_id", "targetPostId", "target_post_id"];
 const FALLBACK_POST_ID_KEYS = ["id", "_id"];
+const NOTIFICATION_OPEN_DEDUPE_MS = 5000;
 
 if (Platform.OS !== "web") {
   Notifications.setNotificationHandler({
@@ -156,6 +157,10 @@ const getNotificationKey = (
 export default function RootLayout() {
   const router = useRouter();
   const handledNotificationIdsRef = useRef(new Set<string>());
+  const lastNotificationPostOpenRef = useRef<{
+    postId: string;
+    openedAt: number;
+  } | null>(null);
 
   useEffect(() => {
     if (Platform.OS === "web") return;
@@ -167,9 +172,20 @@ export default function RootLayout() {
       if (!postId) return;
       if (handledNotificationIdsRef.current.has(notificationKey)) return;
 
-      handledNotificationIdsRef.current.add(notificationKey);
+      const now = Date.now();
+      const lastOpen = lastNotificationPostOpenRef.current;
+      if (
+        lastOpen?.postId === postId &&
+        now - lastOpen.openedAt < NOTIFICATION_OPEN_DEDUPE_MS
+      ) {
+        handledNotificationIdsRef.current.add(notificationKey);
+        return;
+      }
 
-      router.push({
+      handledNotificationIdsRef.current.add(notificationKey);
+      lastNotificationPostOpenRef.current = { postId, openedAt: now };
+
+      router.replace({
         pathname: "/post/[id]",
         params: { id: String(postId) },
       });

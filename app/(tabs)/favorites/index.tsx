@@ -15,7 +15,6 @@ import {
 } from "@/services/mobileApi";
 import { ApiItemResponse, Post } from "@/types/api";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   FlatList,
@@ -28,7 +27,6 @@ import {
 } from "react-native";
 
 export default function Favorites() {
-  const router = useRouter();
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
   const favorites = useFavoritePostsStore((state) => state.favorites);
@@ -54,16 +52,6 @@ export default function Favorites() {
   const getPostKey = useCallback((item?: Post | null) => {
     return String(item?._id || item?.id || "");
   }, []);
-
-  const handleNotificationPress = useCallback(
-    (postId: string) => {
-      router.push({
-        pathname: "/post/[id]",
-        params: { id: postId },
-      });
-    },
-    [router],
-  );
 
   const handleScrollStart = useCallback(() => {
     setIsScrolling(true);
@@ -184,10 +172,7 @@ export default function Favorites() {
 
   return (
     <MarbleBackground style={styles.container}>
-      <PageHeader
-        title="Favorites"
-        onNotificationPress={handleNotificationPress}
-      />
+      <PageHeader title="Favorites" />
 
       {favoriteEntries.length === 0 ? (
         <EmptyState
