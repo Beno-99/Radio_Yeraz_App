@@ -95,6 +95,32 @@ function InfoRow({ label, value, icon, onPress }: InfoRowProps) {
   return <View style={styles.row}>{content}</View>;
 }
 
+function ExternalLinkRow({
+  value,
+  onPress,
+}: {
+  value: string;
+  onPress: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      style={styles.row}
+      activeOpacity={0.76}
+      onPress={onPress}
+    >
+      <View style={styles.rowIcon}>
+        <Ionicons name="link-outline" size={15} color="#e94560" />
+      </View>
+      <View style={styles.rowText}>
+        <Text style={[styles.value, styles.linkValue]} numberOfLines={2}>
+          {value}
+        </Text>
+      </View>
+      <Ionicons name="open-outline" size={16} color="#94a3b8" />
+    </TouchableOpacity>
+  );
+}
+
 const UNAVAILABLE_FAVORITE_MESSAGE =
   "This post is no longer available. It may have been removed by Radio Yeraz.";
 
@@ -503,11 +529,9 @@ export default function PostDetail() {
               icon="location-outline"
             />
             {externalLinks.map((link, index) => (
-              <InfoRow
+              <ExternalLinkRow
                 key={`${link}-${index}`}
-                label={externalLinks.length > 1 ? `Link ${index + 1}` : "Link"}
                 value={formatPostLinkLabel(link)}
-                icon="link-outline"
                 onPress={() => openUrl(link)}
               />
             ))}
@@ -781,6 +805,10 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontSize: 14,
     color: "#f8fafc",
+  },
+  linkValue: {
+    color: "#93c5fd",
+    textDecorationLine: "underline",
   },
   viewerBackdrop: {
     flex: 1,
