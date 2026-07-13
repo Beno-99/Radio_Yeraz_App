@@ -37,6 +37,7 @@ const timeAgo = (dateStr: string) => {
 };
 
 const typeIcon: Record<string, keyof typeof Ionicons.glyphMap> = {
+  BROADCAST: "megaphone-outline",
   NEW_POST: "megaphone-outline",
   POST_LIVE: "radio-outline",
   POST_STARTED_LIVE: "radio-outline",
@@ -50,7 +51,12 @@ const typeIcon: Record<string, keyof typeof Ionicons.glyphMap> = {
   CAROUSEL_TOGGLED: "sync-outline",
 };
 
-const messageTypes = new Set(["EVENT_REMINDER", "NEW_POST", "POST_PUBLISHED"]);
+const messageTypes = new Set([
+  "BROADCAST",
+  "EVENT_REMINDER",
+  "NEW_POST",
+  "POST_PUBLISHED",
+]);
 
 interface Props {
   visible: boolean;

@@ -11,10 +11,22 @@ import * as Notifications from "expo-notifications";
 import { useCallback, useEffect } from "react";
 import { Platform } from "react-native";
 
-const scheduleForegroundLiveNotification = async (
+const shouldShowForegroundSystemNotification = (
   payload: ReturnType<typeof normalizeNotificationPayload>,
 ) => {
-  if (!payload?.isLivePost || Platform.OS === "web") return;
+  return payload?.isLivePost || payload?.type === "BROADCAST";
+};
+
+const scheduleForegroundSystemNotification = async (
+  payload: ReturnType<typeof normalizeNotificationPayload>,
+) => {
+  if (
+    !payload ||
+    !shouldShowForegroundSystemNotification(payload) ||
+    Platform.OS === "web"
+  ) {
+    return;
+  }
 
   try {
     await ensureNotificationChannel();
@@ -46,7 +58,7 @@ const scheduleForegroundLiveNotification = async (
     });
   } catch (error) {
     if (__DEV__) {
-      console.warn("[Notifications] Live foreground alert failed:", error);
+      console.warn("[Notifications] Foreground alert failed:", error);
     }
   }
 };
@@ -101,7 +113,7 @@ export function useNotifications({ listen = true }: { listen?: boolean } = {}) {
       if (!normalized) return;
 
       handleIncomingNotification(normalized, remoteMessage?.messageId);
-      await scheduleForegroundLiveNotification(normalized);
+      await scheduleForegroundSystemNotification(normalized);
     });
 
     return () => {
