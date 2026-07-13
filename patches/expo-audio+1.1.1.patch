@@ -1,0 +1,104 @@
+diff --git a/node_modules/expo-audio/android/src/main/java/expo/modules/audio/AudioPlayer.kt b/node_modules/expo-audio/android/src/main/java/expo/modules/audio/AudioPlayer.kt
+index 320062e..f81fa8c 100644
+--- a/node_modules/expo-audio/android/src/main/java/expo/modules/audio/AudioPlayer.kt
++++ b/node_modules/expo-audio/android/src/main/java/expo/modules/audio/AudioPlayer.kt
+@@ -3,12 +3,14 @@ package expo.modules.audio
+ import android.Manifest
+ import android.content.Context
+ import android.content.pm.PackageManager
++import android.net.Uri
+ import android.media.audiofx.Visualizer
+ import android.util.Log
+ import androidx.core.content.ContextCompat
+ import androidx.media3.common.AudioAttributes
+ import androidx.media3.common.C
+ import androidx.media3.common.MediaItem
++import androidx.media3.common.MediaMetadata
+ import androidx.media3.common.Player
+ import androidx.media3.common.util.UnstableApi
+ import androidx.media3.exoplayer.ExoPlayer
+@@ -103,6 +105,7 @@ class AudioPlayer(
+   fun setActiveForLockScreen(active: Boolean, metadata: Metadata? = null, options: AudioLockScreenOptions? = null) {
+     if (active) {
+       this.metadata = metadata
++      updatePlayerMediaMetadata(metadata)
+       AudioControlsService.setActivePlayer(context, this, metadata, options)
+     } else if (isActiveForLockScreen) {
+       AudioControlsService.setActivePlayer(context, null)
+@@ -112,10 +115,33 @@ class AudioPlayer(
+   fun updateLockScreenMetadata(metadata: Metadata) {
+     if (isActiveForLockScreen) {
+       this.metadata = metadata
++      updatePlayerMediaMetadata(metadata)
+       AudioControlsService.updateMetadata(this, metadata)
+     }
+   }
+ 
++  private fun updatePlayerMediaMetadata(metadata: Metadata?) {
++    val mediaMetadata = MediaMetadata.Builder()
++      .setTitle(metadata?.title)
++      .setArtist(metadata?.artist)
++      .setAlbumTitle(metadata?.albumTitle)
++      .setArtworkUri(metadata?.artworkUrl?.toString()?.let { Uri.parse(it) })
++      .build()
++
++    ref.setPlaylistMetadata(mediaMetadata)
++
++    val itemIndex = ref.currentMediaItemIndex
++    val currentItem = ref.currentMediaItem ?: return
++    if (itemIndex >= 0 && itemIndex < ref.mediaItemCount) {
++      ref.replaceMediaItem(
++        itemIndex,
++        currentItem.buildUpon()
++          .setMediaMetadata(mediaMetadata)
++          .build()
++      )
++    }
++  }
++
+   fun clearLockScreenControls() {
+     if (isActiveForLockScreen) {
+       AudioControlsService.setActivePlayer(context, null)
+@@ -167,6 +193,16 @@ class AudioPlayer(
+         sendPlayerUpdate()
+       }
+     }
++
++    override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
++      val lockScreenMetadata = metadata ?: return
++      val expectedTitle = lockScreenMetadata.title ?: return
++
++      if (isActiveForLockScreen && mediaMetadata.title?.toString() != expectedTitle) {
++        updatePlayerMediaMetadata(lockScreenMetadata)
++        AudioControlsService.updateMetadata(this@AudioPlayer, lockScreenMetadata, force = true)
++      }
++    }
+   })
+ 
+   fun setSamplingEnabled(enabled: Boolean) {
+diff --git a/node_modules/expo-audio/android/src/main/java/expo/modules/audio/service/AudioControlsService.kt b/node_modules/expo-audio/android/src/main/java/expo/modules/audio/service/AudioControlsService.kt
+index 04486e2..3e382d9 100644
+--- a/node_modules/expo-audio/android/src/main/java/expo/modules/audio/service/AudioControlsService.kt
++++ b/node_modules/expo-audio/android/src/main/java/expo/modules/audio/service/AudioControlsService.kt
+@@ -254,8 +254,8 @@ class AudioControlsService : MediaSessionService() {
+     }
+   }
+ 
+-  private fun updateMetadataInternal(player: AudioPlayer, metadata: Metadata?) {
+-    if (player != currentPlayer || metadata == currentMetadata) {
++  private fun updateMetadataInternal(player: AudioPlayer, metadata: Metadata?, force: Boolean = false) {
++    if (player != currentPlayer || (!force && metadata == currentMetadata)) {
+       return
+     }
+     currentMetadata = metadata
+@@ -374,8 +374,8 @@ class AudioControlsService : MediaSessionService() {
+       }
+     }
+ 
+-    fun updateMetadata(player: AudioPlayer, metadata: Metadata?) {
+-      getInstance()?.updateMetadataInternal(player, metadata)
++    fun updateMetadata(player: AudioPlayer, metadata: Metadata?, force: Boolean = false) {
++      getInstance()?.updateMetadataInternal(player, metadata, force)
+     }
+ 
+     fun clearSession() {

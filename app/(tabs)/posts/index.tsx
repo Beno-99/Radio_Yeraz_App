@@ -1,37 +1,49 @@
 import EmptyState from "@/components/EmptyState";
+import MarbleBackground from "@/components/MarbleBackground";
 import PageHeader from "@/components/PageHeader";
 import PostCard from "@/components/PostCard";
 import { usePosts } from "@/hooks/usePosts";
 import { useNavigationStore } from "@/stores/navigationStore";
-import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams } from "expo-router";
+import { Post } from "@/types/api";
+import { useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,
   RefreshControl,
   StyleSheet,
+  Text,
+  TouchableOpacity,
+  useWindowDimensions,
   View,
 } from "react-native";
 
 export default function Posts() {
-  const { posts, loading, refreshing, onRefresh } = usePosts();
+  const { posts, loading, refreshing, error, onRefresh, refetch } = usePosts();
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
   const flatListRef = useRef<FlatList>(null);
   const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { targetPostId, setTargetPostId } = useNavigationStore();
   const [isScrolling, setIsScrolling] = useState(false);
-  const isEmptyState = !loading && posts?.length === 0;
+  const isEmptyState = !loading && !error && posts?.length === 0;
 
   const params = useLocalSearchParams<{
     returnPostId?: string;
     returnVideoTime?: string;
   }>();
 
+  useFocusEffect(
+    useCallback(() => {
+      refetch(true);
+    }, [refetch]),
+  );
+
   useEffect(() => {
     if (!targetPostId || posts.length === 0) return;
 
     const index = posts.findIndex(
-      (p: any) =>
+      (p) =>
         String(p._id) === String(targetPostId) ||
         String(p.id) === String(targetPostId),
     );
@@ -50,9 +62,11 @@ export default function Posts() {
     }
   }, [targetPostId, posts, setTargetPostId]);
 
-  const openMedia = useCallback((item: any) => {
-    console.log("open media", item);
+  const getPostKey = useCallback((item?: Post | null) => {
+    return String(item?._id || item?.id || "");
   }, []);
+
+  const openMedia = useCallback((_item: Post) => {}, []);
 
   const handleScrollStart = useCallback(() => {
     setIsScrolling(true);
@@ -81,30 +95,25 @@ export default function Posts() {
   }, []);
 
   const renderItem = useCallback(
-    ({ item }: { item: any }) => (
-      <PostCard
-        item={item}
-        openMedia={openMedia}
-        isScrolling={isScrolling}
-        isRefreshing={refreshing}
-        returnVideoTime={
-          params.returnPostId === String(item._id)
-            ? Number(params.returnVideoTime || 0)
-            : 0
-        }
-      />
-    ),
-    [
-      openMedia,
-      isScrolling,
-      refreshing,
-      params.returnPostId,
-      params.returnVideoTime,
-    ],
+    ({ item }: { item: Post }) => {
+      return (
+        <PostCard
+          item={item}
+          openMedia={openMedia}
+          isScrolling={isScrolling}
+          returnVideoTime={
+            params.returnPostId === String(item._id)
+              ? Number(params.returnVideoTime || 0)
+              : 0
+          }
+        />
+      );
+    },
+    [openMedia, isScrolling, params.returnPostId, params.returnVideoTime],
   );
 
   const keyExtractor = useCallback(
-    (item: any, index: number) =>
+    (item: Post, index: number) =>
       item?._id?.toString() || item?.id?.toString() || index.toString(),
     [],
   );
@@ -112,7 +121,7 @@ export default function Posts() {
   const scrollToPost = useCallback(
     (postId: string) => {
       const index = posts.findIndex(
-        (p: any) =>
+        (p) =>
           String(p._id) === String(postId) || String(p.id) === String(postId),
       );
       if (index !== -1 && flatListRef.current) {
@@ -127,12 +136,7 @@ export default function Posts() {
   );
 
   return (
-    <View style={styles.container}>
-      <LinearGradient
-        colors={["#0a0e17", "#111827", "#0f172a"]}
-        style={StyleSheet.absoluteFill}
-      />
-
+    <MarbleBackground style={styles.container}>
       <PageHeader onNotificationPress={scrollToPost} />
 
       {loading ? (
@@ -141,6 +145,18 @@ export default function Posts() {
           color="#e94560"
           style={{ marginTop: 40 }}
         />
+      ) : error && posts.length === 0 ? (
+        <View style={styles.errorState}>
+          <Text style={styles.errorTitle}>Could not load posts</Text>
+          <Text style={styles.errorSubtitle}>{error}</Text>
+          <TouchableOpacity
+            activeOpacity={0.82}
+            style={styles.retryButton}
+            onPress={() => refetch()}
+          >
+            <Text style={styles.retryText}>Try Again</Text>
+          </TouchableOpacity>
+        </View>
       ) : isEmptyState ? (
         <EmptyState
           title="No Posts Yet"
@@ -173,23 +189,64 @@ export default function Posts() {
               tintColor="#e94560"
             />
           }
-          contentContainerStyle={styles.listContent}
-          removeClippedSubviews
+          contentContainerStyle={[
+            styles.listContent,
+            isLandscape && styles.listContentLandscape,
+          ]}
+          removeClippedSubviews={false}
           maxToRenderPerBatch={4}
           windowSize={5}
           initialNumToRender={3}
           updateCellsBatchingPeriod={50}
         />
       )}
-    </View>
+    </MarbleBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+  errorState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 28,
+  },
+  errorTitle: {
+    color: "#fff",
+    fontSize: 20,
+    fontWeight: "800",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  errorSubtitle: {
+    color: "#cbd5e1",
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 18,
+    textAlign: "center",
+  },
+  retryButton: {
+    minWidth: 132,
+    alignItems: "center",
+    backgroundColor: "#e94560",
+    borderRadius: 999,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  retryText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "800",
+  },
   listContent: {
     paddingBottom: 100,
     paddingHorizontal: 10,
     paddingTop: 10,
+  },
+  listContentLandscape: {
+    paddingBottom: 72,
+    paddingHorizontal: 18,
+    paddingTop: 8,
   },
 });

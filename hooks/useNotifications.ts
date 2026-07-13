@@ -1,10 +1,57 @@
 // hooks/useNotifications.ts
 import { useNotificationStore } from "@/stores/notificationStore";
+import {
+  NOTIFICATION_CHANNEL_ID,
+  ensureNotificationChannel,
+} from "@/services/notificationPermissions.service";
+import { normalizeNotificationPayload } from "@/utils/notificationPayload";
 import { getApp } from "@react-native-firebase/app";
 import { getMessaging, onMessage } from "@react-native-firebase/messaging";
+import * as Notifications from "expo-notifications";
 import { useCallback, useEffect } from "react";
+import { Platform } from "react-native";
 
-export function useNotifications() {
+const scheduleForegroundLiveNotification = async (
+  payload: ReturnType<typeof normalizeNotificationPayload>,
+) => {
+  if (!payload?.isLivePost || Platform.OS === "web") return;
+
+  try {
+    await ensureNotificationChannel();
+
+    const identifier =
+      payload.id ||
+      payload._id ||
+      (payload.postId ? `live-post-${payload.postId}` : undefined);
+
+    await Notifications.scheduleNotificationAsync({
+      ...(identifier ? { identifier } : {}),
+      content: {
+        title: payload.title,
+        body: payload.message,
+        data: payload.data,
+        sound: true,
+        priority: Notifications.AndroidNotificationPriority.HIGH,
+        color: "#D71920",
+        vibrate: [0, 180, 120, 180],
+      },
+      trigger:
+        Platform.OS === "android"
+          ? {
+              type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+              seconds: 1,
+              channelId: NOTIFICATION_CHANNEL_ID,
+            }
+          : null,
+    });
+  } catch (error) {
+    if (__DEV__) {
+      console.warn("[Notifications] Live foreground alert failed:", error);
+    }
+  }
+};
+
+export function useNotifications({ listen = true }: { listen?: boolean } = {}) {
   const {
     addNotification,
     clearUnread,
@@ -30,56 +77,37 @@ export function useNotifications() {
   );
 
   useEffect(() => {
-    const app = getApp();
-    const messaging = getMessaging(app);
+    if (!listen || Platform.OS === "web") return;
+
+    let messaging: ReturnType<typeof getMessaging>;
+
+    try {
+      const app = getApp();
+      messaging = getMessaging(app);
+    } catch (error) {
+      if (__DEV__) {
+        console.warn("[FCM] Foreground listener unavailable:", error);
+      }
+      return;
+    }
 
     const unsubscribeForeground = onMessage(messaging, async (remoteMessage) => {
-      const rawData = remoteMessage?.data ?? {};
-      let parsedData: any = undefined;
+      const normalized = normalizeNotificationPayload({
+        fallbackId: remoteMessage?.messageId,
+        notification: remoteMessage?.notification,
+        rawData: remoteMessage?.data,
+      });
 
-      if (typeof rawData.data === "string") {
-        try {
-          parsedData = JSON.parse(rawData.data);
-        } catch {
-          parsedData = rawData.data;
-        }
-      }
-
-      const hasParsedObject =
-        parsedData && typeof parsedData === "object" && !Array.isArray(parsedData);
-
-      const notificationType = rawData.type || "GENERAL";
-      const line1 =
-        rawData.title ||
-        parsedData?.title ||
-        remoteMessage?.notification?.title ||
-        "Notification";
-      const line2 =
-        rawData.description ||
-        parsedData?.description ||
-        rawData.message ||
-        parsedData?.message ||
-        remoteMessage?.notification?.body ||
-        "";
-      const normalizedTitle = line2 ? `${String(line1)}\n${String(line2)}` : String(line1);
-
-      const normalized = {
-        id: rawData.id || rawData._id,
-        _id: rawData._id,
-        title: normalizedTitle,
-        message: rawData.message || remoteMessage?.notification?.body || "",
-        type: notificationType,
-        data: hasParsedObject ? parsedData : rawData,
-        createdAt: rawData.createdAt || new Date().toISOString(),
-      };
+      if (!normalized) return;
 
       handleIncomingNotification(normalized, remoteMessage?.messageId);
+      await scheduleForegroundLiveNotification(normalized);
     });
 
     return () => {
       unsubscribeForeground();
     };
-  }, [handleIncomingNotification]);
+  }, [handleIncomingNotification, listen]);
 
   const markAllRead = useCallback(() => {
     clearUnread();

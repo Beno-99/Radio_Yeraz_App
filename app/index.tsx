@@ -1,4 +1,5 @@
 // app/index.tsx
+import MarbleBackground from "@/components/MarbleBackground";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
@@ -13,6 +14,14 @@ import {
 } from "react-native";
 
 const { width, height } = Dimensions.get("window");
+
+type RingAnimationConfig = {
+  delay: number;
+  opacity: Animated.Value;
+  scale: Animated.Value;
+  targetOpacity: number;
+  targetScale: number;
+};
 
 export default function IntroScreen() {
   const logoScale = useRef(new Animated.Value(0.3)).current;
@@ -37,160 +46,218 @@ export default function IntroScreen() {
   const liveBadgeOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    let isMounted = true;
+    const runningAnimations: Animated.CompositeAnimation[] = [];
+
+    const startAnimation = (animation: Animated.CompositeAnimation) => {
+      runningAnimations.push(animation);
+      animation.start();
+    };
+
     // Continuous rotation
-    Animated.loop(
-      Animated.timing(rotateAnim, {
-        toValue: 1,
-        duration: 6000,
-        easing: Easing.linear,
-        useNativeDriver: true,
-      }),
-    ).start();
+    startAnimation(
+      Animated.loop(
+        Animated.timing(rotateAnim, {
+          toValue: 1,
+          duration: 6000,
+          easing: Easing.linear,
+          useNativeDriver: true,
+        }),
+      ),
+    );
 
     // 1. Logo bounces in
-    Animated.sequence([
-      Animated.delay(200),
-      Animated.parallel([
-        Animated.spring(logoScale, {
-          toValue: 1,
-          tension: 40,
-          friction: 6,
-          useNativeDriver: true,
-        }),
-        Animated.timing(logoOpacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ]),
-    ]).start();
-
-    // 2. Rings expand
-    [
-      [ring1Scale, ring1Opacity, 600, 1.6, 0.7],
-      [ring2Scale, ring2Opacity, 850, 2.2, 0.45],
-      [ring3Scale, ring3Opacity, 1100, 2.9, 0.25],
-    ].forEach(([scale, opacity, delay, targetScale, targetOpacity]: any) => {
+    startAnimation(
       Animated.sequence([
-        Animated.delay(delay),
+        Animated.delay(200),
         Animated.parallel([
-          Animated.timing(scale, {
-            toValue: targetScale,
-            duration: 900,
-            easing: Easing.out(Easing.cubic),
+          Animated.spring(logoScale, {
+            toValue: 1,
+            tension: 40,
+            friction: 6,
             useNativeDriver: true,
           }),
-          Animated.timing(opacity, {
-            toValue: targetOpacity,
+          Animated.timing(logoOpacity, {
+            toValue: 1,
             duration: 500,
             useNativeDriver: true,
           }),
         ]),
-      ]).start();
-    });
+      ]),
+    );
+
+    // 2. Rings expand
+    const ringAnimations: RingAnimationConfig[] = [
+      {
+        delay: 600,
+        opacity: ring1Opacity,
+        scale: ring1Scale,
+        targetOpacity: 0.7,
+        targetScale: 1.6,
+      },
+      {
+        delay: 850,
+        opacity: ring2Opacity,
+        scale: ring2Scale,
+        targetOpacity: 0.45,
+        targetScale: 2.2,
+      },
+      {
+        delay: 1100,
+        opacity: ring3Opacity,
+        scale: ring3Scale,
+        targetOpacity: 0.25,
+        targetScale: 2.9,
+      },
+    ];
+
+    ringAnimations.forEach(
+      ({ delay, opacity, scale, targetOpacity, targetScale }) => {
+        startAnimation(
+          Animated.sequence([
+            Animated.delay(delay),
+            Animated.parallel([
+              Animated.timing(scale, {
+                toValue: targetScale,
+                duration: 900,
+                easing: Easing.out(Easing.cubic),
+                useNativeDriver: true,
+              }),
+              Animated.timing(opacity, {
+                toValue: targetOpacity,
+                duration: 500,
+                useNativeDriver: true,
+              }),
+            ]),
+          ]),
+        );
+      },
+    );
 
     // 3. Live badge
-    Animated.sequence([
-      Animated.delay(800),
-      Animated.timing(liveBadgeOpacity, {
-        toValue: 1,
-        duration: 400,
-        useNativeDriver: true,
-      }),
-    ]).start();
+    startAnimation(
+      Animated.sequence([
+        Animated.delay(800),
+        Animated.timing(liveBadgeOpacity, {
+          toValue: 1,
+          duration: 400,
+          useNativeDriver: true,
+        }),
+      ]),
+    );
 
     // 4. Line draws
-    Animated.sequence([
-      Animated.delay(900),
-      Animated.timing(lineWidth, {
-        toValue: 1,
-        duration: 600,
-        easing: Easing.out(Easing.quad),
-        useNativeDriver: false,
-      }),
-    ]).start();
+    startAnimation(
+      Animated.sequence([
+        Animated.delay(900),
+        Animated.timing(lineWidth, {
+          toValue: 1,
+          duration: 600,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: false,
+        }),
+      ]),
+    );
 
     // 5. Title
-    Animated.sequence([
-      Animated.delay(950),
-      Animated.parallel([
-        Animated.timing(titleOpacity, {
-          toValue: 1,
-          duration: 600,
-          useNativeDriver: true,
-        }),
-        Animated.timing(titleY, {
-          toValue: 0,
-          duration: 600,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
+    startAnimation(
+      Animated.sequence([
+        Animated.delay(950),
+        Animated.parallel([
+          Animated.timing(titleOpacity, {
+            toValue: 1,
+            duration: 600,
+            useNativeDriver: true,
+          }),
+          Animated.timing(titleY, {
+            toValue: 0,
+            duration: 600,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+        ]),
       ]),
-    ]).start();
+    );
 
     // 6. Subtitle
-    Animated.sequence([
-      Animated.delay(1200),
-      Animated.parallel([
-        Animated.timing(subtitleOpacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(subtitleY, {
-          toValue: 0,
-          duration: 500,
-          easing: Easing.out(Easing.cubic),
-          useNativeDriver: true,
-        }),
+    startAnimation(
+      Animated.sequence([
+        Animated.delay(1200),
+        Animated.parallel([
+          Animated.timing(subtitleOpacity, {
+            toValue: 1,
+            duration: 500,
+            useNativeDriver: true,
+          }),
+          Animated.timing(subtitleY, {
+            toValue: 0,
+            duration: 500,
+            easing: Easing.out(Easing.cubic),
+            useNativeDriver: true,
+          }),
+        ]),
       ]),
-    ]).start();
+    );
 
     // 7. Tagline
-    Animated.sequence([
-      Animated.delay(1500),
-      Animated.timing(tagOpacity, {
-        toValue: 1,
-        duration: 600,
-        useNativeDriver: true,
-      }),
-    ]).start();
-
-    // 8. Dots
-    Animated.sequence([
-      Animated.delay(1600),
-      Animated.parallel([
-        Animated.timing(dot1Opacity, {
+    startAnimation(
+      Animated.sequence([
+        Animated.delay(1500),
+        Animated.timing(tagOpacity, {
           toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(dot3Opacity, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.spring(dot2Scale, {
-          toValue: 1.4,
-          tension: 60,
-          friction: 5,
+          duration: 600,
           useNativeDriver: true,
         }),
       ]),
-    ]).start();
+    );
 
-    // 9. Fade out
-    Animated.sequence([
+    // 8. Dots
+    startAnimation(
+      Animated.sequence([
+        Animated.delay(1600),
+        Animated.parallel([
+          Animated.timing(dot1Opacity, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.timing(dot3Opacity, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }),
+          Animated.spring(dot2Scale, {
+            toValue: 1.4,
+            tension: 60,
+            friction: 5,
+            useNativeDriver: true,
+          }),
+        ]),
+      ]),
+    );
+
+    // 9. Handoff while the intro is still visible.
+    const handoffAnimation = Animated.sequence([
       Animated.delay(3200),
       Animated.timing(screenOpacity, {
-        toValue: 0,
-        duration: 700,
-        easing: Easing.in(Easing.cubic),
+        toValue: 0.96,
+        duration: 180,
+        easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }),
-    ]).start(() => {
-      router.replace("/(tabs)/stream");
+    ]);
+
+    runningAnimations.push(handoffAnimation);
+    handoffAnimation.start(({ finished }) => {
+      if (finished && isMounted) {
+        router.replace("/(tabs)/stream");
+      }
     });
+
+    return () => {
+      isMounted = false;
+      runningAnimations.forEach((animation) => animation.stop());
+    };
   }, []);
 
   const spin = rotateAnim.interpolate({
@@ -205,10 +272,7 @@ export default function IntroScreen() {
 
   return (
     <Animated.View style={[styles.container, { opacity: screenOpacity }]}>
-      <LinearGradient
-        colors={["#060810", "#0a0e1a", "#060810"]}
-        style={StyleSheet.absoluteFill}
-      />
+      <MarbleBackground style={StyleSheet.absoluteFill} />
 
       {/* Background glow */}
       <View style={styles.radialGlow} />
@@ -339,6 +403,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: "center",
+    backgroundColor: "#070b14",
     justifyContent: "center",
   },
 

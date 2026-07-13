@@ -1,41 +1,43 @@
 // services/socket.service.ts
+import { SOCKET_URL } from "@/services/mobileApi";
 import { io, Socket } from "socket.io-client";
-
-const SOCKET_URL =
-  process.env.EXPO_PUBLIC_IMAGE_BASE_URL || "http://192.168.1.197:8000";
 
 class SocketService {
   private socket: Socket | null = null;
   private listeners: Map<string, Set<Function>> = new Map();
+  private connectionRefs = 0;
 
   connect() {
-    if (this.socket?.connected) return;
-
-    console.log("🔌 Connecting socket to:", SOCKET_URL);
+    this.connectionRefs += 1;
+    if (this.socket) return;
 
     this.socket = io(SOCKET_URL, {
-      // ← removed /notifications namespace
       transports: ["websocket", "polling"],
       reconnection: true,
       reconnectionAttempts: 10,
       reconnectionDelay: 2000,
+      timeout: 10000,
     });
 
     this.socket.on("connect", () => {
-      console.log("✅ Socket connected");
+      console.log(
+        "Socket connected:",
+        this.socket?.id,
+        this.socket?.io.engine.transport.name,
+      );
       this.socket?.emit("get_notifications");
     });
 
-    this.socket.on("disconnect", () => {
-      console.log("❌ Socket disconnected");
-    });
+    this.socket.on("disconnect", () => {});
 
     this.socket.on("connect_error", (err) => {
-      console.log("⚠️ Socket connection error:", err.message);
+      console.log("Socket connection error:", err.message);
     });
+
     this.socket.onAny((event, data) => {
-      console.log("📨 Socket event received:", event, data);
+      console.log("Socket event received:", event, data);
     });
+
     const events = [
       "new_notification",
       "notifications_list",
@@ -45,13 +47,16 @@ class SocketService {
     ];
 
     events.forEach((event) => {
-      this.socket?.on(event, (data: any) => {
+      this.socket?.on(event, (data: unknown) => {
         this.listeners.get(event)?.forEach((cb) => cb(data));
       });
     });
   }
 
   disconnect() {
+    this.connectionRefs = Math.max(0, this.connectionRefs - 1);
+    if (this.connectionRefs > 0) return;
+
     this.socket?.disconnect();
     this.socket = null;
   }
@@ -67,7 +72,7 @@ class SocketService {
     this.listeners.get(event)?.delete(callback);
   }
 
-  emit(event: string, data?: any) {
+  emit(event: string, data?: unknown) {
     this.socket?.emit(event, data);
   }
 
