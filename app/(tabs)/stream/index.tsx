@@ -51,10 +51,12 @@ import {
 } from "react-native";
 import Animated, {
   cancelAnimation,
+  Easing,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
   withRepeat,
+  withSequence,
   withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -71,12 +73,11 @@ const METADATA_REFRESH_INTERVAL_MS = 15000;
 const LOGO_WAVE_DURATION_MS = 4200;
 const LOGO_WAVE_STAGGER_MS = 1300;
 const LOGO_WAVE_RESET_MS = 600;
-const MARQUEE_GAP = 42;
-const MARQUEE_MIN_DURATION_MS = 8500;
-const MARQUEE_MAX_DURATION_MS = 12400;
-const MARQUEE_MS_PER_PIXEL = 34;
-const MARQUEE_CYCLE_INTERVAL_MS = 15000;
-const TITLE_MEASURE_WIDTH = 3200;
+const MARQUEE_GAP = 64;
+const MARQUEE_MIN_DURATION_MS = 3800;
+const MARQUEE_MS_PER_PIXEL = 9;
+const MARQUEE_START_DELAY_MS = 350;
+const TITLE_MEASURE_WIDTH = 12000;
 const STREAM_AUDIO_HEADERS = {
   "Icy-MetaData": "0",
 };
@@ -301,8 +302,16 @@ const cleanMetadataTitle = (value: unknown) => {
 };
 
 const getTextMetadataTitle = (value: string) => {
-  const icyTitle = value.match(/StreamTitle=['"]([^'"]+)['"]/i)?.[1];
-  if (icyTitle) return cleanMetadataTitle(icyTitle);
+  const icyTitle = value.match(/StreamTitle=(.*?)(?:;|$)/i)?.[1];
+  if (icyTitle) {
+    return cleanMetadataTitle(
+      icyTitle
+        .trim()
+        .replace(/^['"]/, "")
+        .replace(/['"]$/, "")
+        .replace(/\\(['"])/g, "$1"),
+    );
+  }
 
   return value.split(/\r?\n/).map(cleanMetadataTitle).find(Boolean) || "";
 };
@@ -384,10 +393,7 @@ function MarqueeTrackTitle({ title }: { title: string }) {
   const [textWidth, setTextWidth] = useState(0);
   const translateX = useSharedValue(0);
   const shouldAnimate =
-    containerWidth > 0 && textWidth > 0 && textWidth > containerWidth;
-  const restingStart = shouldAnimate
-    ? 0
-    : Math.max((containerWidth - textWidth) / 2, 0);
+    containerWidth > 0 && textWidth > 0;
 
   const onContainerLayout = useCallback((event: LayoutChangeEvent) => {
     const nextWidth = Math.ceil(event.nativeEvent.layout.width);
@@ -405,46 +411,48 @@ function MarqueeTrackTitle({ title }: { title: string }) {
 
   useEffect(() => {
     cancelAnimation(translateX);
-    translateX.value = restingStart;
+    translateX.value = 0;
 
     if (!shouldAnimate) return;
 
-    const endX = -(textWidth + MARQUEE_GAP);
-    const distance = textWidth + MARQUEE_GAP;
-    const duration = Math.min(
-      MARQUEE_MAX_DURATION_MS,
-      Math.max(MARQUEE_MIN_DURATION_MS, distance * MARQUEE_MS_PER_PIXEL),
+    const loopDistance = textWidth + MARQUEE_GAP;
+    const duration = Math.max(
+      MARQUEE_MIN_DURATION_MS,
+      loopDistance * MARQUEE_MS_PER_PIXEL,
     );
 
-    const startSweep = () => {
-      translateX.value = withTiming(endX, { duration }, (finished) => {
-        if (finished) {
-          translateX.value = restingStart;
-        }
-      });
-    };
-
-    const firstSweep = setTimeout(startSweep, 650);
-    const sweepInterval = setInterval(startSweep, MARQUEE_CYCLE_INTERVAL_MS);
+    translateX.value = withDelay(
+      MARQUEE_START_DELAY_MS,
+      withRepeat(
+        withSequence(
+          withTiming(-loopDistance, {
+            duration,
+            easing: Easing.linear,
+          }),
+          withTiming(0, { duration: 0 }),
+        ),
+        -1,
+        false,
+      ),
+    );
 
     return () => {
-      clearTimeout(firstSweep);
-      clearInterval(sweepInterval);
       cancelAnimation(translateX);
-      translateX.value = restingStart;
+      translateX.value = 0;
     };
-  }, [
-    containerWidth,
-    displayTitle,
-    restingStart,
-    shouldAnimate,
-    textWidth,
-    translateX,
-  ]);
+  }, [displayTitle, shouldAnimate, textWidth, translateX]);
 
   const marqueeStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }));
+  const animatedTextStyle =
+    shouldAnimate && textWidth > 0
+      ? [styles.songTitle, { width: textWidth }]
+      : styles.songTitle;
+  const animatedTrackStyle =
+    shouldAnimate && textWidth > 0
+      ? { width: textWidth * 2 + MARQUEE_GAP }
+      : undefined;
 
   return (
     <View style={styles.marqueeViewport} onLayout={onContainerLayout}>
@@ -460,17 +468,22 @@ function MarqueeTrackTitle({ title }: { title: string }) {
         style={[
           styles.marqueeTrack,
           !shouldAnimate ? styles.marqueeTrackStatic : undefined,
+          animatedTrackStyle,
           shouldAnimate ? marqueeStyle : undefined,
         ]}
       >
-        <Text style={styles.songTitle} numberOfLines={1} ellipsizeMode="clip">
+        <Text
+          style={animatedTextStyle}
+          numberOfLines={1}
+          ellipsizeMode="clip"
+        >
           {displayTitle}
         </Text>
         {shouldAnimate ? (
           <>
             <View style={styles.marqueeSpacer} />
             <Text
-              style={[styles.songTitle, styles.marqueeDuplicate]}
+              style={[styles.songTitle, styles.marqueeDuplicate, { width: textWidth }]}
               numberOfLines={1}
               ellipsizeMode="clip"
             >
@@ -735,6 +748,8 @@ export default function RadioPlayer() {
     Boolean(statusMessage) && (!shouldDelayStatusPopup || showDelayedStatus);
   const isWaveformActive =
     radioPlayerState === "playing" || isLoadingRingActive;
+  const isLogoWaveActive =
+    radioPlayerState !== "offline" && radioPlayerState !== "error";
 
   useEffect(() => {
     setAudioModeAsync({
@@ -1036,27 +1051,28 @@ export default function RadioPlayer() {
 
   // ================== ANIMATIONS ==================
   useEffect(() => {
-    if (isPlaying) {
-      wave1.value = withRepeat(
-        withTiming(1, { duration: LOGO_WAVE_DURATION_MS }),
+    const createLogoWave = () =>
+      withRepeat(
+        withSequence(
+          withTiming(1, { duration: LOGO_WAVE_DURATION_MS }),
+          withTiming(0, { duration: 0 }),
+        ),
         -1,
         false,
       );
+
+    if (isLogoWaveActive) {
+      wave1.value = 0;
+      wave2.value = 0;
+      wave3.value = 0;
+      wave1.value = createLogoWave();
       wave2.value = withDelay(
         LOGO_WAVE_STAGGER_MS,
-        withRepeat(
-          withTiming(1, { duration: LOGO_WAVE_DURATION_MS }),
-          -1,
-          false,
-        ),
+        createLogoWave(),
       );
       wave3.value = withDelay(
         LOGO_WAVE_STAGGER_MS * 2,
-        withRepeat(
-          withTiming(1, { duration: LOGO_WAVE_DURATION_MS }),
-          -1,
-          false,
-        ),
+        createLogoWave(),
       );
     } else {
       cancelAnimation(wave1);
@@ -1066,7 +1082,7 @@ export default function RadioPlayer() {
       wave2.value = withTiming(0, { duration: LOGO_WAVE_RESET_MS });
       wave3.value = withTiming(0, { duration: LOGO_WAVE_RESET_MS });
     }
-  }, [isPlaying, wave1, wave2, wave3]);
+  }, [isLogoWaveActive, wave1, wave2, wave3]);
 
   useEffect(() => {
     if (isLoadingRingActive) {
@@ -1993,7 +2009,7 @@ const styles = StyleSheet.create({
   },
   marqueeViewport: {
     width: "100%",
-    minHeight: 23,
+    minHeight: 24,
     justifyContent: "center",
     overflow: "hidden",
   },
@@ -2019,6 +2035,7 @@ const styles = StyleSheet.create({
   songTitle: {
     flexShrink: 0,
     fontSize: 17,
+    lineHeight: 22,
     fontWeight: "800",
     color: "#fff",
     textAlign: "center",
