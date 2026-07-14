@@ -12,7 +12,9 @@ const CALL_MARKER = "installRadioYerazNetworkClient()";
 const CONSTANTS = `
 private const val RADIO_YERAZ_API_HOST = "api.radioyeraz.com"
 private const val RADIO_YERAZ_USER_AGENT =
-  "Mozilla/5.0 (Linux; Android 16; SM-A356E) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Mobile Safari/537.36"
+  "Mozilla/5.0 (Linux; Android 16; SM-A356E) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/148.0.7778.215 Mobile Safari/537.36"
+private const val RADIO_YERAZ_ACCEPT =
+  "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8"
 `;
 
 const INSTALL_FUNCTION = `
@@ -26,10 +28,17 @@ const INSTALL_FUNCTION = `
 
             if (request.url.host.equals(RADIO_YERAZ_API_HOST, ignoreCase = true)) {
               requestBuilder
+                .removeHeader("Content-Type")
+                .removeHeader("X-Requested-With")
                 .header("User-Agent", RADIO_YERAZ_USER_AGENT)
-                .header("Accept", "application/json,text/plain,*/*")
+                .header("Accept", RADIO_YERAZ_ACCEPT)
                 .header("Accept-Language", "en-US,en;q=0.9")
                 .header("Cache-Control", "no-cache")
+                .header("Upgrade-Insecure-Requests", "1")
+                .header("Sec-Fetch-Site", "none")
+                .header("Sec-Fetch-Mode", "navigate")
+                .header("Sec-Fetch-User", "?1")
+                .header("Sec-Fetch-Dest", "document")
             }
 
             chain.proceed(requestBuilder.build())

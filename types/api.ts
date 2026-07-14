@@ -65,6 +65,35 @@ export interface Post {
   __v?: number;
 }
 
+export type MobilePublicPost = Pick<Post, "id" | "_id"> &
+  Partial<
+    Pick<
+      Post,
+      | "title"
+      | "description"
+      | "mainImage"
+      | "videoSource"
+      | "youtubeUrl"
+      | "youtubeVideoId"
+      | "facebookUrl"
+      | "profileName"
+      | "eventDate"
+      | "eventTime"
+      | "location"
+      | "isLive"
+      | "liveStatus"
+      | "liveStatusCheckedAt"
+      | "isPublished"
+      | "status"
+      | "postedDate"
+      | "link"
+      | "createdAt"
+      | "updatedAt"
+      | "expiresAt"
+      | "reminderEnabled"
+    >
+  >;
+
 export interface Carousel {
   id: string;
   _id: string;

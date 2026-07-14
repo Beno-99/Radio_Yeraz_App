@@ -37,11 +37,7 @@ export default function Posts() {
     }, [refetch]),
   );
 
-  const getPostKey = useCallback((item?: Post | null) => {
-    return String(item?._id || item?.id || "");
-  }, []);
-
-  const openMedia = useCallback((_item: Post) => {}, []);
+  const openMedia = useCallback(() => {}, []);
 
   const handleScrollStart = useCallback(() => {
     setIsScrolling(true);

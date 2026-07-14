@@ -24,8 +24,10 @@ class NotificationSoundService {
           sound.unloadAsync();
         }
       });
-    } catch (e) {
-      console.log("Notification sound/vibration error:", e);
+    } catch (error) {
+      if (__DEV__) {
+        console.warn("Notification sound/vibration error:", error);
+      }
     }
   }
 }

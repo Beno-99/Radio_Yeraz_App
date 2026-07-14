@@ -9,8 +9,10 @@ import React, {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
+import { AppState, type AppStateStatus } from "react-native";
 
 const OFFLINE_CONFIRM_DELAY_MS = 1500;
 
@@ -37,6 +39,13 @@ export const NetworkContext =
 
 function getObservedNetworkStatus(networkState: NetworkState): NetworkStatus {
   if (
+    networkState.type === NetworkStateType.NONE ||
+    networkState.isConnected === false
+  ) {
+    return "offline";
+  }
+
+  if (
     networkState.type === NetworkStateType.UNKNOWN ||
     networkState.isConnected === undefined ||
     networkState.isInternetReachable === undefined
@@ -44,11 +53,7 @@ function getObservedNetworkStatus(networkState: NetworkState): NetworkStatus {
     return "checking";
   }
 
-  if (
-    networkState.type === NetworkStateType.NONE ||
-    networkState.isConnected === false ||
-    networkState.isInternetReachable === false
-  ) {
+  if (networkState.isInternetReachable === false) {
     return "offline";
   }
 
@@ -57,36 +62,72 @@ function getObservedNetworkStatus(networkState: NetworkState): NetworkStatus {
 
 export function NetworkProvider({ children }: { children: React.ReactNode }) {
   const networkState = useNetworkState();
+  const { isConnected, isInternetReachable, type } = networkState;
   const [networkStatus, setNetworkStatus] =
     useState<NetworkStatus>("checking");
+  const offlineTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearOfflineTimer = useCallback(() => {
+    if (!offlineTimerRef.current) return;
+    clearTimeout(offlineTimerRef.current);
+    offlineTimerRef.current = null;
+  }, []);
+
+  const applyNetworkStatus = useCallback(
+    (observedStatus: NetworkStatus) => {
+      clearOfflineTimer();
+
+      if (observedStatus !== "offline") {
+        setNetworkStatus(observedStatus);
+        return;
+      }
+
+      offlineTimerRef.current = setTimeout(() => {
+        setNetworkStatus("offline");
+        offlineTimerRef.current = null;
+      }, OFFLINE_CONFIRM_DELAY_MS);
+    },
+    [clearOfflineTimer],
+  );
 
   const refreshNetworkStatus = useCallback(async () => {
     const freshState = await getNetworkStateAsync();
     const observedStatus = getObservedNetworkStatus(freshState);
-    setNetworkStatus(observedStatus);
+    applyNetworkStatus(observedStatus);
     return observedStatus;
-  }, []);
+  }, [applyNetworkStatus]);
 
   useEffect(() => {
-    const observedStatus = getObservedNetworkStatus(networkState);
+    const observedStatus = getObservedNetworkStatus({
+      isConnected,
+      isInternetReachable,
+      type,
+    });
+    applyNetworkStatus(observedStatus);
+  }, [applyNetworkStatus, isConnected, isInternetReachable, type]);
 
-    if (observedStatus !== "offline") {
-      setNetworkStatus(observedStatus);
-      return;
-    }
+  useEffect(() => {
+    return () => {
+      clearOfflineTimer();
+    };
+  }, [clearOfflineTimer]);
 
-    const offlineTimer = setTimeout(() => {
-      setNetworkStatus("offline");
-    }, OFFLINE_CONFIRM_DELAY_MS);
+  useEffect(() => {
+    void refreshNetworkStatus();
+
+    const subscription = AppState.addEventListener(
+      "change",
+      (state: AppStateStatus) => {
+        if (state === "active") {
+          void refreshNetworkStatus();
+        }
+      },
+    );
 
     return () => {
-      clearTimeout(offlineTimer);
+      subscription.remove();
     };
-  }, [
-    networkState.isConnected,
-    networkState.isInternetReachable,
-    networkState.type,
-  ]);
+  }, [refreshNetworkStatus]);
 
   const value = useMemo<NetworkContextValue>(
     () => ({

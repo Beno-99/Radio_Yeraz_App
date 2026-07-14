@@ -22,11 +22,15 @@ const getReminderNow = () => {
 
   const testNow = new Date(TEST_NOW);
   if (Number.isNaN(testNow.getTime())) {
-    console.log(`Event reminder test date is invalid: ${TEST_NOW}`);
+    if (__DEV__) {
+      console.log(`Event reminder test date is invalid: ${TEST_NOW}`);
+    }
     return new Date();
   }
 
-  console.log(`Event reminder test date active: ${testNow.toISOString()}`);
+  if (__DEV__) {
+    console.log(`Event reminder test date active: ${testNow.toISOString()}`);
+  }
   return testNow;
 };
 
@@ -79,6 +83,9 @@ const getReminderMessage = (post: Post, formattedDate: string) => {
   return `Don't miss this event tomorrow, ${formattedDate}${time}.`;
 };
 
+const getErrorMessage = (error: unknown) =>
+  error instanceof Error ? error.message : String(error ?? "Unknown error");
+
 const readStoredReminderKeys = async () => {
   try {
     const raw = await AsyncStorage.getItem(LOCAL_REMINDER_KEYS_STORAGE);
@@ -96,8 +103,10 @@ const readStoredReminderKeys = async () => {
 const writeStoredReminderKeys = async (keys: Record<string, string>) => {
   try {
     await AsyncStorage.setItem(LOCAL_REMINDER_KEYS_STORAGE, JSON.stringify(keys));
-  } catch (e: any) {
-    console.log("Event reminder storage error:", e?.message);
+  } catch (error) {
+    if (__DEV__) {
+      console.warn("Event reminder storage error:", getErrorMessage(error));
+    }
   }
 };
 
@@ -132,12 +141,16 @@ class EventReminderService {
       });
 
       if (tomorrowEvents.length === 0) {
-        console.log("No events tomorrow");
+        if (__DEV__) {
+          console.log("No events tomorrow");
+        }
         this.lastCheckedDate = today;
         return;
       }
 
-      console.log(`Found ${tomorrowEvents.length} events tomorrow`);
+      if (__DEV__) {
+        console.log(`Found ${tomorrowEvents.length} events tomorrow`);
+      }
 
       const { useNotificationStore } =
         await import("@/stores/notificationStore");
@@ -165,12 +178,16 @@ class EventReminderService {
           isRead: false,
         });
 
-        console.log(`Reminder added to bell for: ${post.title}`);
+        if (__DEV__) {
+          console.log(`Reminder added to bell for: ${post.title}`);
+        }
       }
 
       this.lastCheckedDate = today;
-    } catch (e: any) {
-      console.log("Event reminder error:", e?.message);
+    } catch (error) {
+      if (__DEV__) {
+        console.warn("Event reminder error:", getErrorMessage(error));
+      }
     }
   }
 
@@ -268,16 +285,20 @@ class EventReminderService {
 
         storedKeys[notificationId] = reminderKey;
         storedKeysChanged = true;
-        console.log(
-          `Scheduled event reminder for ${post.title}: ${reminderDate.toISOString()}`,
-        );
+        if (__DEV__) {
+          console.log(
+            `Scheduled event reminder for ${post.title}: ${reminderDate.toISOString()}`,
+          );
+        }
       }
 
       if (storedKeysChanged) {
         await writeStoredReminderKeys(storedKeys);
       }
-    } catch (e: any) {
-      console.log("Event reminder schedule error:", e?.message);
+    } catch (error) {
+      if (__DEV__) {
+        console.warn("Event reminder schedule error:", getErrorMessage(error));
+      }
     }
   }
 }

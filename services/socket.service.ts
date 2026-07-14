@@ -2,14 +2,21 @@
 import { SOCKET_URL } from "@/services/mobileApi";
 import { io, Socket } from "socket.io-client";
 
+type SocketCallback = (data: unknown) => void;
+
+const PUBLIC_SOCKET_EVENTS_ENABLED =
+  process.env.EXPO_PUBLIC_ENABLE_SOCKET_EVENTS === "true";
+
 class SocketService {
   private socket: Socket | null = null;
-  private listeners: Map<string, Set<Function>> = new Map();
+  private listeners: Map<string, Set<SocketCallback>> = new Map();
   private connectionRefs = 0;
 
   connect() {
+    if (!PUBLIC_SOCKET_EVENTS_ENABLED) return false;
+
     this.connectionRefs += 1;
-    if (this.socket) return;
+    if (this.socket) return true;
 
     this.socket = io(SOCKET_URL, {
       transports: ["websocket", "polling"],
@@ -20,22 +27,21 @@ class SocketService {
     });
 
     this.socket.on("connect", () => {
-      console.log(
-        "Socket connected:",
-        this.socket?.id,
-        this.socket?.io.engine.transport.name,
-      );
-      this.socket?.emit("get_notifications");
+      if (__DEV__) {
+        console.log(
+          "Socket connected:",
+          this.socket?.id,
+          this.socket?.io.engine.transport.name,
+        );
+      }
     });
 
     this.socket.on("disconnect", () => {});
 
     this.socket.on("connect_error", (err) => {
-      console.log("Socket connection error:", err.message);
-    });
-
-    this.socket.onAny((event, data) => {
-      console.log("Socket event received:", event, data);
+      if (__DEV__) {
+        console.log("Socket connection error:", err.message);
+      }
     });
 
     const events = [
@@ -51,9 +57,13 @@ class SocketService {
         this.listeners.get(event)?.forEach((cb) => cb(data));
       });
     });
+
+    return true;
   }
 
   disconnect() {
+    if (!PUBLIC_SOCKET_EVENTS_ENABLED) return;
+
     this.connectionRefs = Math.max(0, this.connectionRefs - 1);
     if (this.connectionRefs > 0) return;
 
@@ -61,19 +71,24 @@ class SocketService {
     this.socket = null;
   }
 
-  on(event: string, callback: Function) {
+  on(event: string, callback: SocketCallback) {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
     }
     this.listeners.get(event)?.add(callback);
   }
 
-  off(event: string, callback: Function) {
+  off(event: string, callback: SocketCallback) {
     this.listeners.get(event)?.delete(callback);
   }
 
   emit(event: string, data?: unknown) {
+    if (!PUBLIC_SOCKET_EVENTS_ENABLED) return;
     this.socket?.emit(event, data);
+  }
+
+  isEnabled() {
+    return PUBLIC_SOCKET_EVENTS_ENABLED;
   }
 
   isConnected() {

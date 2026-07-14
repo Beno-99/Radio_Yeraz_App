@@ -13,7 +13,9 @@
       "supportsTablet": true,
       "googleServicesFile": "./google-services.json",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
@@ -27,11 +29,23 @@
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "permissions": [
+        "android.permission.INTERNET",
         "android.permission.MODIFY_AUDIO_SETTINGS",
-        "android.permission.RECORD_AUDIO",
         "android.permission.POST_NOTIFICATIONS",
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ],
+      "blockedPermissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.CAMERA",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.READ_MEDIA_AUDIO",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.READ_MEDIA_VIDEO"
       ],
       "package": "com.radioyeraz.radioyeraz",
       "googleServicesFile": "./google-services.json"
@@ -45,8 +59,8 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splash-radioLogo.png",
-          "imageWidth": 200,
+          "image": "./assets/images/splash-transparent.png",
+          "imageWidth": 1,
           "resizeMode": "contain",
           "backgroundColor": "#070b14",
           "dark": {
@@ -54,7 +68,13 @@
           }
         }
       ],
-      "expo-audio",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false
+        }
+      ],
       "expo-video",
       "expo-asset",
       "@react-native-firebase/app",
@@ -63,22 +83,10 @@
       "./plugins/withAndroidVideoFullscreen",
       "./plugins/withAndroidApiUserAgent",
       [
-        "expo-audio",
-        {
-          "microphonePermission": false
-        }
-      ],
-      [
-        "expo-audio",
-        {
-          "enableBackgroundPlayback": true
-        }
-      ],
-      [
         "expo-av",
         {
-          "microphonePermission": "none",
-          "cameraPermission": "none"
+          "microphonePermission": false,
+          "cameraPermission": false
         }
       ],
       [
@@ -91,7 +99,9 @@
             "kotlinVersion": "2.0.21"
           }
         }
-      ]
+      ],
+      "expo-font",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

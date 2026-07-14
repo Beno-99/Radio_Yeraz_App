@@ -1,5 +1,7 @@
 // app/_layout.tsx
+import { BrowserApiFallbackProvider } from "@/components/BrowserApiFallbackProvider";
 import FirebaseNotificationListener from "@/components/FirebaseNotificationListener";
+import FixedTabBar from "@/components/FixedTabBar";
 import { NetworkContext, NetworkProvider } from "@/components/NetworkProvider";
 import { OfflineScreen } from "@/components/OfflineScreen";
 import { getApp } from "@react-native-firebase/app";
@@ -266,32 +268,36 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <ThemeProvider value={radioYerazTheme}>
           <View style={styles.root}>
-            <FirebaseNotificationListener />
-            <AppGate>
-              <Stack
-                screenOptions={{
-                  contentStyle: styles.screen,
-                  headerShown: false,
-                }}
-              >
-                <Stack.Screen name="index" />
-                <Stack.Screen name="(tabs)" />
-                <Stack.Screen name="post/[id]" />
-                <Stack.Screen
-                  name="modal"
-                  options={{
-                    presentation: "modal",
-                    title: "Modal",
-                    headerShown: true,
+            <BrowserApiFallbackProvider>
+              <FirebaseNotificationListener />
+              <AppGate>
+                <Stack
+                  screenOptions={{
+                    animation: "none",
+                    contentStyle: styles.screen,
+                    headerShown: false,
                   }}
-                />
-              </Stack>
-            </AppGate>
-            <StatusBar
-              backgroundColor={APP_BACKGROUND}
-              style="light"
-              translucent={false}
-            />
+                >
+                  <Stack.Screen name="index" />
+                  <Stack.Screen name="(tabs)" />
+                  <Stack.Screen name="post/[id]" />
+                  <Stack.Screen
+                    name="modal"
+                    options={{
+                      presentation: "modal",
+                      title: "Modal",
+                      headerShown: true,
+                    }}
+                  />
+                </Stack>
+              </AppGate>
+              <FixedTabBar />
+              <StatusBar
+                backgroundColor={APP_BACKGROUND}
+                style="light"
+                translucent={false}
+              />
+            </BrowserApiFallbackProvider>
           </View>
         </ThemeProvider>
       </SafeAreaProvider>

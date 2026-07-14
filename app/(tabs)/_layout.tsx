@@ -1,7 +1,6 @@
-import { Ionicons } from "@expo/vector-icons";
 import { Tabs, usePathname, useRouter, type Href } from "expo-router";
 import { useCallback, useMemo } from "react";
-import { StyleSheet, useWindowDimensions, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import {
   Directions,
   Gesture,
@@ -26,8 +25,6 @@ const TAB_ROUTES = [
 export default function TabsLayout() {
   const pathname = usePathname();
   const router = useRouter();
-  const { width, height } = useWindowDimensions();
-  const isLandscape = width > height;
 
   const currentTabIndex = useMemo(() => {
     return TAB_ROUTES.findIndex((route) => pathname.startsWith(route.path));
@@ -76,84 +73,42 @@ export default function TabsLayout() {
       <GestureDetector gesture={tabSwipeGesture}>
         <View style={styles.root}>
           <Tabs
+            layout={({ children }) => (
+              <View style={styles.navigatorRoot}>{children}</View>
+            )}
+            screenLayout={({ children }) => (
+              <View style={styles.screenRoot}>{children}</View>
+            )}
             screenOptions={{
               headerShown: false,
-              animation: "shift",
-              transitionSpec: {
-                animation: "timing",
-                config: {
-                  duration: 260,
-                },
-              },
-
-              tabBarStyle: [
-                styles.tabBar,
-                isLandscape ? styles.tabBarLandscape : styles.tabBarPortrait,
-              ],
-              tabBarLabelStyle: [
-                styles.tabBarLabel,
-                isLandscape && styles.tabBarLabelLandscape,
-              ],
-              tabBarItemStyle: isLandscape
-                ? styles.tabBarItemLandscape
-                : undefined,
-
-              tabBarActiveTintColor: "#ff4d6d",
-              tabBarInactiveTintColor: "#9ca3af",
+              animation: "none",
+              sceneStyle: styles.scene,
+              tabBarStyle: styles.hiddenTabBar,
             }}
           >
             <Tabs.Screen
               name="stream/index"
-              options={{
-                title: "Stream",
-                tabBarIcon: ({ color, size }) => (
-                  <Ionicons name="radio" size={size} color={color} />
-                ),
-              }}
+              options={{ title: "Stream" }}
             />
 
             <Tabs.Screen
               name="posts/index"
-              options={{
-                title: "Posts",
-                tabBarIcon: ({ color, size }) => (
-                  <Ionicons name="newspaper" size={size} color={color} />
-                ),
-              }}
+              options={{ title: "Posts" }}
             />
 
             <Tabs.Screen
               name="favorites/index"
-              options={{
-                title: "Favorites",
-                tabBarIcon: ({ color, size }) => (
-                  <Ionicons name="heart" size={size} color={color} />
-                ),
-              }}
+              options={{ title: "Favorites" }}
             />
 
             <Tabs.Screen
               name="about/index"
-              options={{
-                title: "About Us",
-                tabBarIcon: ({ color, size }) => (
-                  <Ionicons
-                    name="information-circle"
-                    size={size}
-                    color={color}
-                  />
-                ),
-              }}
+              options={{ title: "About Us" }}
             />
 
             <Tabs.Screen
               name="contact/index"
-              options={{
-                title: "Contact Us",
-                tabBarIcon: ({ color, size }) => (
-                  <Ionicons name="mail" size={size} color={color} />
-                ),
-              }}
+              options={{ title: "Contact Us" }}
             />
           </Tabs>
         </View>
@@ -165,33 +120,19 @@ export default function TabsLayout() {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
+    backgroundColor: "#070b14",
   },
-  tabBar: {
-    position: "absolute",
-    backgroundColor: "#1b2746",
-    borderTopWidth: 0,
-    elevation: 0,
+  navigatorRoot: {
+    flex: 1,
   },
-  tabBarPortrait: {
-    height: 80,
-    paddingBottom: 10,
-    paddingTop: 10,
+  screenRoot: {
+    flex: 1,
   },
-  tabBarLandscape: {
-    height: 58,
-    paddingBottom: 4,
-    paddingTop: 4,
+  scene: {
+    backgroundColor: "#070b14",
+    flex: 1,
   },
-  tabBarLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-  },
-  tabBarLabelLandscape: {
-    fontSize: 11,
-    marginTop: -2,
-  },
-  tabBarItemLandscape: {
-    height: 50,
-    paddingVertical: 0,
+  hiddenTabBar: {
+    display: "none",
   },
 });

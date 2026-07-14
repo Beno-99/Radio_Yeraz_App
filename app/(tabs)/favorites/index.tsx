@@ -8,12 +8,13 @@ import {
   useFavoritePostsStore,
 } from "@/stores/favoritePostsStore";
 import {
+  extractApiItem,
   getApiErrorMessage,
   isCancelledApiError,
   MobileApiError,
   mobileApi,
 } from "@/services/mobileApi";
-import { ApiItemResponse, Post } from "@/types/api";
+import { ApiItemResponse, MobilePublicPost, Post } from "@/types/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -49,7 +50,7 @@ export default function Favorites() {
     [favorites],
   );
 
-  const getPostKey = useCallback((item?: Post | null) => {
+  const getPostKey = useCallback((item?: Post | MobilePublicPost | null) => {
     return String(item?._id || item?.id || "");
   }, []);
 
@@ -95,7 +96,7 @@ export default function Favorites() {
             const response = await mobileApi.get<ApiItemResponse<Post>>(
               `/posts/${postId}`,
             );
-            const post = response.data?.data;
+            const post = extractApiItem<Post>(response.data, ["post"]);
 
             if (post) {
               syncPosts([post]);

@@ -31,10 +31,14 @@ export default function AboutScreen() {
         try {
           await Linking.openURL(fallbackUrl);
         } catch (fallbackErr) {
-          console.error("Couldn't load page", fallbackErr);
+          if (__DEV__) {
+            console.error("Couldn't load page", fallbackErr);
+          }
         }
       } else {
-        console.error("Couldn't load page", err);
+        if (__DEV__) {
+          console.error("Couldn't load page", err);
+        }
       }
     }
   };
@@ -43,7 +47,9 @@ export default function AboutScreen() {
     try {
       await Linking.openURL(`mailto:${email}`);
     } catch (err) {
-      console.error("Couldn't open email app", err);
+      if (__DEV__) {
+        console.error("Couldn't open email app", err);
+      }
     }
   };
 
@@ -245,25 +251,6 @@ export default function AboutScreen() {
                 radioyerazsupport@gmail.com
               </Text>
             </TouchableOpacity>
-
-            <View
-              style={[styles.infoRow, isLandscape && styles.infoRowLandscape]}
-            >
-              <Ionicons
-                name="code-slash"
-                size={18}
-                color="#e94560"
-                style={styles.rowIcon}
-              />
-              <Text
-                style={[
-                  styles.infoText,
-                  isLandscape && styles.infoTextLandscape,
-                ]}
-              >
-                Developer: Benon Merdkhanian
-              </Text>
-            </View>
 
             <TouchableOpacity
               style={[styles.infoRow, isLandscape && styles.infoRowLandscape]}

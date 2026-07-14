@@ -339,9 +339,15 @@ export function getYouTubePlayerHtml(
 }
 
 export function getPostMediaType(
-  post?: Pick<
-    Post,
-    "mainImage" | "videoSource" | "youtubeVideoId" | "youtubeUrl" | "facebookUrl"
+  post?: Partial<
+    Pick<
+      Post,
+      | "mainImage"
+      | "videoSource"
+      | "youtubeVideoId"
+      | "youtubeUrl"
+      | "facebookUrl"
+    >
   > | null,
 ): "image" | "youtube" | "facebook" | "none" {
   if (!post) return "none";

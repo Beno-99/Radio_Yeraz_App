@@ -3,7 +3,7 @@ import PostMediaPreview from "@/components/PostMediaPreview";
 import { useFavoritePostsStore } from "@/stores/favoritePostsStore";
 import { useVideoProgress } from "@/stores/videoProgressStore";
 import ZoomableImage from "@/components/ZoomableImage";
-import { Post } from "@/types/api";
+import { MobilePublicPost, Post } from "@/types/api";
 import {
   getAbsoluteMediaUrl,
   getPostMediaType,
@@ -30,8 +30,8 @@ const MOBILE_MEDIA_ASPECT_RATIO = 4 / 3;
 const VIDEO_MEDIA_ASPECT_RATIO = 16 / 9;
 
 type PostCardProps = {
-  item: Post;
-  openMedia?: (item: Post) => void;
+  item: Post | MobilePublicPost;
+  openMedia?: (item: Post | MobilePublicPost) => void;
   isScrolling?: boolean;
   returnVideoTime?: number;
 };
@@ -169,7 +169,9 @@ function PostCard({
     try {
       await Linking.openURL(url);
     } catch (error) {
-      console.warn("Unable to open external link:", error);
+      if (__DEV__) {
+        console.warn("Unable to open external link:", error);
+      }
     }
   };
 

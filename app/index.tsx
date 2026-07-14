@@ -238,7 +238,7 @@ export default function IntroScreen() {
 
     // 9. Handoff while the intro is still visible.
     const handoffAnimation = Animated.sequence([
-      Animated.delay(3200),
+      Animated.delay(2300),
       Animated.timing(screenOpacity, {
         toValue: 0.96,
         duration: 180,
@@ -379,11 +379,11 @@ export default function IntroScreen() {
             },
           ]}
         >
-          Հայկական երաժշտութիւն 24/7
+          Armenian music, culture, and voice 24/7
         </Animated.Text>
 
         <Animated.Text style={[styles.tagline, { opacity: tagOpacity }]}>
-          Armenian Music · Syria · World
+          Armenian Music - Syria - World
         </Animated.Text>
       </View>
 

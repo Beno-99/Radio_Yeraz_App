@@ -4,6 +4,7 @@ import YouTubePlayer from "@/components/YouTubePlayer";
 import ZoomableImage from "@/components/ZoomableImage";
 import {
   MobileApiError,
+  extractApiItem,
   getApiErrorMessage,
   isCancelledApiError,
   mobileApi,
@@ -180,7 +181,7 @@ export default function PostDetail() {
       );
 
       if (!controller.signal.aborted) {
-        const fetchedPost = response.data?.data ?? null;
+        const fetchedPost = extractApiItem<Post>(response.data, ["post"]);
         setPost(fetchedPost);
 
         if (fetchedPost) {
@@ -263,7 +264,9 @@ export default function PostDetail() {
     try {
       await Linking.openURL(url);
     } catch (error) {
-      console.warn("Unable to open external link:", error);
+      if (__DEV__) {
+        console.warn("Unable to open external link:", error);
+      }
     }
   };
 

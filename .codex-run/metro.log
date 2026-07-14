@@ -1,0 +1,983 @@
+env: load .env
+env: export EXPO_PUBLIC_API_URL EXPO_PUBLIC_MEDIA_URL EXPO_PUBLIC_SOCKET_URL EXPO_PUBLIC_YOUTUBE_CHANNEL_URL EXPO_PUBLIC_STREAM_METADATA_URL EXPO_PUBLIC_STREAM_URL
+Starting project at D:\benon2\full-project\radioyeraz
+React Compiler enabled
+Starting Metro Bundler
+Waiting on http://localhost:8081
+Logs for your project will appear below.
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android .\index.js ░░░░░░░░░░░░░░░░  1.0% (1/1)
+Android .\index.js ▓▓▓▓░░░░░░░░░░░░ 25.0% ( 39/174)
+Android .\index.js ▓▓▓▓░░░░░░░░░░░░ 25.0% ( 89/246)
+Android .\index.js ▓▓▓▓░░░░░░░░░░░░ 25.5% (157/315)
+Android .\index.js ▓▓▓▓▓░░░░░░░░░░░ 32.6% (224/406)
+Android .\index.js ▓▓▓▓▓░░░░░░░░░░░ 36.6% (280/463)
+Android .\index.js ▓▓▓▓▓▓░░░░░░░░░░ 41.5% (320/497)
+Android .\index.js ▓▓▓▓▓▓▓░░░░░░░░░ 49.2% (366/522)
+Android .\index.js ▓▓▓▓▓▓▓▓▓░░░░░░░ 58.7% (420/548)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 69.5% (476/571)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 71.3% (528/635)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓░░░░░ 72.7% (562/659)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% (617/721)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% (671/804)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% (705/863)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% (763/966)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% ( 816/1025)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% ( 865/1137)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% ( 921/1183)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% ( 976/1222)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% (1022/1248)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% (1067/1304)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% (1112/1384)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% (1160/1441)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% (1218/1456)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% (1274/1467)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 79.6% (1330/1491)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 80.2% (1378/1539)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓░░░░ 81.1% (1432/1590)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 86.0% (1488/1605)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 88.0% (1535/1636)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 91.5% (1577/1649)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.4% (1631/1714)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.4% (1679/1750)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓░░ 92.9% (1735/1801)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 94.3% (1789/1849)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 96.6% (1847/1879)
+Android .\index.js ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.9% (1901/1901)
+Android Bundled 135953ms index.js (1901 modules)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: LIVE STREAM [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: LIVE STREAM [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: LIVE STREAM [AbortError: Aborted]
+ LOG  Now playing: Hripsime Hakobyan & Leo - Mam
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Hripsime Hakobyan & Leo - Mam [AbortError: Aborted]
+ WARN  Metadata problem. trackTitle: Hripsime Hakobyan & Leo - Mam [AbortError: Aborted]
+ WARN  Metadata problem. trackTitle: Hripsime Hakobyan & Leo - Mam [AbortError: Aborted]
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 74ms index.js (1 module)
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: LIVE STREAM [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: LIVE STREAM [AbortError: Aborted]
+ LOG  Now playing: Hripsime Hakobyan & Leo - Mam
+ LOG  Now playing: Փոլ Բաղդադլյան ժպտուն քո աչերը/Paul Baghdadlian jbdun qo achere
+ WARN  Metadata problem. trackTitle: Փոլ Բաղդադլյան ժպտուն քո աչերը/Paul Baghdadlian jbdun qo achere [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/64
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Փոլ Բաղդադլյան ժպտուն քո աչերը/Paul Baghdadlian jbdun qo achere [AbortError: Aborted]
+ WARN  Metadata problem. trackTitle: Փոլ Բաղդադլյան ժպտուն քո աչերը/Paul Baghdadlian jbdun qo achere [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Փոլ Բաղդադլյան ժպտուն քո աչերը/Paul Baghdadlian jbdun qo achere [AbortError: Aborted]
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 83ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: LIVE STREAM [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Heravor Barevner
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Heravor Barevner [AbortError: Aborted]
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 71ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: LIVE STREAM [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: LIVE STREAM [AbortError: Aborted]
+ LOG  Now playing: Heravor Barevner
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 71ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: LIVE STREAM [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: LIVE STREAM [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: LIVE STREAM [AbortError: Aborted]
+ LOG  Now playing: Heravor Barevner
+ LOG  Now playing: {
+ LOG  [FCM] Subscribed to topic: client
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: { [AbortError: Aborted]
+ WARN  Metadata problem. trackTitle: { [AbortError: Aborted]
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 71ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 76ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: LIVE STREAM [AbortError: Aborted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: LIVE STREAM [AbortError: Aborted]
+ LOG  Now playing: {
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 1616ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 77ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 70ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Carousels fetch error: [MobileApiError: Access denied by Imunify360 bot-protection. IPs used for automation should be whitelisted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 70ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 1039ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 68ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 72ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM] Subscribed to topic: client
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 71ms index.js (1 module)
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 68ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Retrying public API request over HTTP fallback: /stream-links/active
+ WARN  Retrying public API request over HTTP fallback: /carousels/public
+ WARN  Retrying public API request over HTTP fallback: /posts
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 73ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Retrying public API request over HTTP fallback: /stream-links/active
+ WARN  Retrying public API request over HTTP fallback: /carousels/public
+ WARN  Retrying public API request over HTTP fallback: /carousels/public
+ WARN  Retrying public API request over HTTP fallback: /stream-links/active
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Retrying public API request over HTTP fallback: /posts
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 69ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 77ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM] Subscribed to topic: client
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 70ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 74ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 66ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  No events tomorrow
+ INFO  [PostsFetch] {"activeCount": 0, "fetchedCount": 0, "firstPost": null, "rawType": "string", "status": 200, "success": undefined}
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 69ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ INFO  [PostsFetch] {"activeCount": 0, "fetchedCount": 0, "firstPost": null, "rawType": "string", "status": 200, "success": undefined}
+ LOG  No events tomorrow
+ INFO  [PostsFetch] {"activeCount": 0, "dataPrefix": "<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"utf8\">
+  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">
+  <script>
+      (function(){
+          setTimeout(function(){
+              window.", "fetchedCount": 0, "firstPost": null, "rawType": "string", "status": 200, "success": undefined}
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ INFO  [PostsFetch] {"activeCount": 0, "dataPrefix": "<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"utf8\">
+  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">
+  <script>
+      (function(){
+          setTimeout(function(){
+              window.", "fetchedCount": 0, "firstPost": null, "rawType": "string", "status": 200, "success": undefined}
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ INFO  [PostsFetch] {"activeCount": 0, "dataPrefix": "<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"utf8\">
+  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">
+  <script>
+      (function(){
+          setTimeout(function(){
+              window.", "fetchedCount": 0, "firstPost": null, "rawType": "string", "status": 200, "success": undefined}
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ INFO  [PostsFetch] {"activeCount": 0, "dataPrefix": "<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"utf8\">
+  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">
+  <script>
+      (function(){
+          setTimeout(function(){
+              window.", "fetchedCount": 0, "firstPost": null, "rawType": "string", "status": 200, "success": undefined}
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ INFO  [PostsFetch] {"activeCount": 0, "dataPrefix": "<!DOCTYPE html>
+<html lang=\"en\">
+<head>
+  <meta charset=\"utf8\">
+  <meta name=\"viewport\" content=\"width=device-width,initial-scale=1.0\">
+  <script>
+      (function(){
+          setTimeout(function(){
+              window.", "fetchedCount": 0, "firstPost": null, "rawType": "string", "status": 200, "success": undefined}
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  [API] Browser fallback failed: [Error: Browser API fallback is not ready.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  [API] Browser fallback failed: [Error: Browser API fallback is not ready.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  [API] Browser fallback failed: [Error: Browser API fallback is not ready.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  [API] Browser fallback failed: [Error: The API returned an unreadable browser response.]
+ WARN  [API] Browser fallback failed: [Error: The API returned an unreadable browser response.]
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 80ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  [API] Browser fallback failed: [Error: The API returned an unreadable browser response.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  [API] Browser fallback failed: [Error: The API returned an unreadable browser response.]
+ WARN  Failed to fetch stream links, using fallback streams: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  [API] Browser fallback failed: [Error: The API returned an unreadable browser response.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  [API] Browser fallback failed: [Error: The API returned an unreadable browser response.]
+ WARN  Carousels fetch error: [MobileApiError: Content is unavailable right now. Please try again soon.]
+ WARN  [API] Browser fallback failed: [Error: The API returned an unreadable browser response.]
+ WARN  [BrowserApiFallback] Unreadable body: {"contentType": "text/html", "finalUrl": "https://api.radioyeraz.com/api/posts?isPublished=true&limit=50&sortBy=postedDate&sortOrder=desc", "prefix": "Please wait while your request is being verified..."}
+ WARN  [API] Browser fallback failed: [Error: The API returned an unreadable browser response.]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  No events tomorrow
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 75ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  No events tomorrow
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 79ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  No events tomorrow
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Now playing: Play kohar
+ WARN  Metadata problem. trackTitle: Play kohar [AbortError: Aborted]
+ LOG  Now playing: Live Stream
+ LOG  Now playing: Play kohar
+ WARN  Metadata problem. trackTitle: Play kohar [AbortError: Aborted]
+ LOG  Now playing: Live Stream
+ LOG  Now playing: Play kohar
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Play kohar [AbortError: Aborted]
+ LOG  Now playing: Live Stream
+ LOG  Now playing: Play kohar
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Now playing: Play kohar
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Play kohar [AbortError: Aborted]
+ LOG  Now playing: Live Stream
+ LOG  Now playing: Vatche Yeramian Vol 2 Hay Herossneri Yerke
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Vatche Yeramian Vol 2 Hay Herossneri Yerke [AbortError: Aborted]
+ WARN  Metadata problem. trackTitle: Vatche Yeramian Vol 2 Hay Herossneri Yerke [AbortError: Aborted]
+ LOG  Now playing: Live Stream
+ LOG  Now playing: Vatche Yeramian Vol 2 Hay Herossneri Yerke
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 74ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ WARN  Metadata problem. trackTitle: Live Stream [AbortError: Aborted]
+ LOG  Now playing: Vatche Yeramian Vol 2 Hay Herossneri Yerke
+ WARN  Metadata problem. trackTitle: Vatche Yeramian Vol 2 Hay Herossneri Yerke [AbortError: Aborted]
+ WARN  Metadata problem. trackTitle: Vatche Yeramian Vol 2 Hay Herossneri Yerke [AbortError: Aborted]
+ LOG  Now playing: Live Stream
+ LOG  Now playing: Vatche Yeramian Vol 2 Hay Herossneri Yerke
+ LOG  No events tomorrow
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ WARN  Metadata problem. trackTitle: Vatche Yeramian Vol 2 Hay Herossneri Yerke [AbortError: Aborted]
+ WARN  Metadata problem. trackTitle: Vatche Yeramian Vol 2 Hay Herossneri Yerke [AbortError: Aborted]
+ LOG  Now playing: Live Stream
+ LOG  Now playing: Mihran Tsarukyan - Mihran Tsarukyan - Harc Chka ' Official Music Video ' [8GX]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Anahit Sahakyan - Lusni Shoghov [8J4]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 71ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Anahit Sahakyan - Lusni Shoghov [8J4]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  No events tomorrow
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Sofi Mkheyan - Leblebijineri Khmberge [8HA]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Saro Tovmasyan/Christine Pepelyan - Sirem Sirem (Live) [8JE]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/64
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Slow/Unknown Artist - Slow [8K0]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Slow/Unknown Artist - Slow [8K0]
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Vatche Yeramian Vol 2 Hay Herossneri Yerke
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/64
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/32
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 69ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Vatche Yeramian Vol 2 Hay Herossneri Yerke
+ LOG  No events tomorrow
+ LOG  Now playing: Vahan Hovhannisyan - Caxikner / Ծաղիկներ (Official Video) 2024
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: SOFI MKHEYAN / GRISHA AGAKHANYAN - Hay es Du ,Hay em Yes (Cover-ARAM ASATRYAN) 2023
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Arabo Ispiryan & Nare Gevorgyan Im hayreniq / Արաբո Իսպիրյան և Նարե Գևորգյան Իմ հայրենիք
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Oksy Avdalyan - Asa - Xosa / Ասա - Խոսա (NEW 2022) la la la li la la la
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/64
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/32
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Ատիս Հարմանտեան - Սիրելի Ուսուցիչ ~ Adiss Harmandian - Sireli Ousoutsich
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 75ms index.js (1 module)
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Ատիս Հարմանտեան - Սիրելի Ուսուցիչ ~ Adiss Harmandian - Sireli Ousoutsich
+ LOG  Now playing: Gaby Galoyan - Piti gnanq || Պիտի գնանք // LIVE IN CONCERT
+ LOG  Now playing: MENATEORK
+ LOG  No events tomorrow
+ LOG  Now playing: 05 Track 5
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Big Ball's In Cowtown (With Asleep At The Wheel)
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Stop
+ LOG  Now playing: CUTTINGCREW
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 79ms index.js (1 module)
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 98ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Anahit Sahakyan - Nazani [8Ja]
+ LOG  Now playing: Gevorg Gasparyan - Yerani Te [8IH]
+ LOG  Found 1 events tomorrow
+ LOG  Scheduled event reminder for Natus molestiae faci: 2026-07-14T18:20:44.071Z
+ LOG  Found 1 events tomorrow
+Android stores\notificationStore.ts ░░░░░░░░░░░░░░░░  1.0% (1/5)
+Android stores\notificationStore.ts ▓░░░░░░░░░░░░░░░ 12.5% ( 17/116)
+Android stores\notificationStore.ts ▓▓▓▓▓▓▓▓▓▓░░░░░░ 66.0% (372/458)
+Android stores\notificationStore.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓░░░ 86.3% (509/548)
+Android stores\notificationStore.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 96.0% (595/647)
+Android stores\notificationStore.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 96.0% (825/879)
+Android stores\notificationStore.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 96.0% (919/946)
+Android stores\notificationStore.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 96.0% (978/998)
+Android stores\notificationStore.ts ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓░ 99.8% (1007/1008)
+Android Bundled 35274ms stores\notificationStore.ts (1008 modules)
+ LOG  Reminder added to bell for: Natus molestiae faci
+ LOG  Reminder added to bell for: Natus molestiae faci
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Glory Box
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/64
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/32
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Singing In The Rain
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Unknown - NEW 2017 RAZMIK AMYAN 2017 [8H4]
+ LOG  Now playing: IMAGINATION
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 66ms index.js (1 module)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: IMAGINATION
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: I Don't Want To Lose Your Love Tonight
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Mucho Mambo
+ LOG  Now playing: Anahit Sahakyan - Alvan Varter [8J2]
+ LOG  Now playing: Anahit Sahakyan - Msho Gorani [8J7]
+ LOG  Now playing: OPUS
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 3710ms index.js (1 module)
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: LAURABRANIGAN
+ LOG  Now playing: Sarkis Guguniani - Dikran Hovhanessian [8IQ]
+Android .\index.js ░░░░░░░░░░░░░░░░  0.0% (0/1)
+Android Bundled 77ms index.js (1 module)
+ WARN  [expo-av]: Expo AV has been deprecated and will be removed in SDK 54. Use the `expo-audio` and `expo-video` packages to replace the required functionality.
+ LOG  [FCM_TOKEN] flYaTrVoSbWyWHGn7X7k22:APA91bG8cV_LhGt-asBiutm6KKyYodmDowg3zKr7Cnu2OlaEYF6IhL6jhzJFecCmK3nwEY4_gac98eQiEblcbOwmAWi13CkavBSDxyZFg_AbtTQrsu3fLfI
+ LOG  [FCM] Subscribed to topic: client
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Using Stream URL: https://streaming05.liveboxstream.uk/proxy/radioye3/stream
+ LOG  Using Metadata URL: https://meta.radioyeraz.com/MetaData.txt
+ LOG  Now playing: Saro Tovmasyan - Du Miak Eak (Live) [8Ji]
+ LOG  Now playing: Whiskey in the Jar

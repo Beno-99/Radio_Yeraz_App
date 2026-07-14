@@ -1,7 +1,7 @@
-import PageHeader from "@/components/PageHeader";
 import MarbleBackground from "@/components/MarbleBackground";
-import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
 import { NetworkContext } from "@/components/NetworkProvider";
+import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
+import PageHeader from "@/components/PageHeader";
 import StreamWaveform from "@/components/StreamWaveform";
 import { extractApiArray, mobileApi } from "@/services/mobileApi";
 import { socketService } from "@/services/socket.service";
@@ -75,22 +75,24 @@ const LOGO_WAVE_STAGGER_MS = 1300;
 const LOGO_WAVE_RESET_MS = 600;
 const MARQUEE_GAP = 64;
 const MARQUEE_MIN_DURATION_MS = 3800;
-const MARQUEE_MS_PER_PIXEL = 9;
+const MARQUEE_MS_PER_PIXEL = 20;
 const MARQUEE_START_DELAY_MS = 350;
 const TITLE_MEASURE_WIDTH = 12000;
+const DEFAULT_TRACK_TITLE = "Live Stream";
 const STREAM_AUDIO_HEADERS = {
   "Icy-MetaData": "0",
 };
-const RADIO_ARTIST = "Radio Yeraz • Syria";
+const RADIO_ARTIST = "Radio Yeraz - Syria";
 const RADIO_ALBUM = "Radio Yeraz";
 const RADIO_ARTWORK_URL = "https://www.radioyeraz.com/radioLogo-300.jpg";
 const fallbackImage = require("@/assets/images/sublogo.png");
 const FALLBACK_STREAM_URL =
   process.env.EXPO_PUBLIC_STREAM_URL ||
   "https://streaming05.liveboxstream.uk/proxy/radioye3/stream";
-const FALLBACK_METADATA_URL =
-  process.env.EXPO_PUBLIC_STREAM_METADATA_URL ||
-  "https://meta.radioyeraz.com/MetaData.txt";
+const ENV_STREAM_METADATA_URL =
+  process.env.EXPO_PUBLIC_STREAM_METADATA_URL || "";
+const DEFAULT_METADATA_URL = "https://meta.radioyeraz.com/MetaData.txt";
+const FALLBACK_METADATA_URL = ENV_STREAM_METADATA_URL || DEFAULT_METADATA_URL;
 const FALLBACK_STREAM_LINKS: StreamLink[] = [
   {
     id: "fallback-low",
@@ -154,7 +156,7 @@ type JsonRecord = Record<string, unknown>;
 const normalizeUrl = (value: string) => value.replace(/\/+$/, "");
 
 const normalizePlaybackTitle = (title?: string | null) =>
-  title?.trim() || "LIVE STREAM";
+  cleanMetadataTitle(title) || DEFAULT_TRACK_TITLE;
 
 const parseBitrate = (value?: number | string | null) => {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -249,6 +251,29 @@ const getStreamMetadataUrl = (
   option?: Pick<StreamLink, "metadataUrl" | "metaUrl"> | null,
 ) => option?.metadataUrl || option?.metaUrl || "";
 
+const getValidMetadataUrl = (value?: string | null, streamUrl?: string) => {
+  if (!value || isLikelyAudioStreamUrl(value, streamUrl)) return "";
+  return value;
+};
+
+const getStreamStatusMetadataUrl = (streamUrl?: string | null) => {
+  if (!streamUrl) return "";
+
+  try {
+    const url = new URL(streamUrl);
+    const path = url.pathname.replace(/\/+$/, "");
+
+    if (/\/proxy\/[^/]+\/(stream|32|64)$/i.test(path)) {
+      url.pathname = path.replace(/\/(stream|32|64)$/i, "/status-json.xsl");
+      url.search = "";
+      url.hash = "";
+      return url.toString();
+    }
+  } catch {}
+
+  return "";
+};
+
 const initialStreamOptions = buildStreamOptions([]);
 const initialStreamOption = getPreferredStreamOption(initialStreamOptions);
 
@@ -282,14 +307,18 @@ const cleanMetadataTitle = (value: unknown) => {
   const title = String(value)
     .replace(/<[^>]+>/g, " ")
     .replace(/\s+/g, " ")
+    .replace(/^['"]+|['"]+$/g, "")
     .trim();
   const normalized = title.toLowerCase();
 
   if (
     !title ||
+    /^[{}\[\](),;:'"`]+$/.test(title) ||
+    /^[{\[\]}]/.test(title) ||
     normalized === "null" ||
     normalized === "(null)" ||
     normalized === "undefined" ||
+    normalized === "[object object]" ||
     normalized === "cultureclub" ||
     normalized === "live aleppo-1" ||
     normalized === "live in aleppo-1" ||
@@ -302,6 +331,16 @@ const cleanMetadataTitle = (value: unknown) => {
 };
 
 const getTextMetadataTitle = (value: string) => {
+  const trimmedValue = value.trim();
+
+  if (/^[{\[]/.test(trimmedValue)) {
+    try {
+      return getJsonMetadataTitle(JSON.parse(trimmedValue));
+    } catch {
+      return "";
+    }
+  }
+
   const icyTitle = value.match(/StreamTitle=(.*?)(?:;|$)/i)?.[1];
   if (icyTitle) {
     return cleanMetadataTitle(
@@ -316,27 +355,74 @@ const getTextMetadataTitle = (value: string) => {
   return value.split(/\r?\n/).map(cleanMetadataTitle).find(Boolean) || "";
 };
 
-const getObjectMetadataTitle = (value: unknown) => {
+const getObjectMetadataTitle = (value: unknown, depth = 0): string => {
+  if (depth > 4) return "";
+
+  if (Array.isArray(value)) {
+    return (
+      value
+        .map((item) => getObjectMetadataTitle(item, depth + 1))
+        .find(Boolean) || ""
+    );
+  }
+
   if (!isJsonRecord(value)) return "";
+
+  const artist = cleanMetadataTitle(
+    value.artist || value.artistName || value.currentArtist,
+  );
+  const trackTitle = cleanMetadataTitle(
+    value.trackTitle ||
+      value.trackName ||
+      value.title ||
+      value.name ||
+      value.text,
+  );
+
+  if (artist && trackTitle && artist !== trackTitle) {
+    return `${artist} - ${trackTitle}`;
+  }
 
   const directTitle = cleanMetadataTitle(
     value.title ||
+      value.text ||
+      value.name ||
       value.song ||
+      value.songTitle ||
+      value.songtitle ||
       value.nowPlaying ||
+      value.now_playing ||
+      value.currently_playing ||
       value.currentSong ||
+      value.currentTrack ||
       value.streamTitle ||
       value.StreamTitle ||
-      value.rawmeta,
+      value.yp_currently_playing ||
+      value.trackTitle ||
+      value.rawmeta ||
+      value.rawMeta,
   );
 
   if (directTitle) return directTitle;
 
-  if (isJsonRecord(value.track)) {
-    const artist = cleanMetadataTitle(value.track.artist);
-    const trackTitle = cleanMetadataTitle(value.track.title);
+  if (trackTitle || artist) return trackTitle || artist;
 
-    if (artist && trackTitle) return `${artist} - ${trackTitle}`;
-    if (trackTitle || artist) return trackTitle || artist;
+  const nestedKeys = [
+    "track",
+    "song",
+    "now_playing",
+    "nowPlaying",
+    "current",
+    "currentSong",
+    "metadata",
+    "data",
+    "result",
+    "payload",
+  ];
+
+  for (const key of nestedKeys) {
+    const nestedTitle = getObjectMetadataTitle(value[key], depth + 1);
+    if (nestedTitle) return nestedTitle;
   }
 
   return "";
@@ -382,18 +468,31 @@ const fetchMetadataTitleFromUrl = async (url: string, signal: AbortSignal) => {
   }
 
   const contentType = res.headers.get("content-type") || "";
-  return contentType.toLowerCase().includes("json")
-    ? getJsonMetadataTitle(await res.json())
-    : getTextMetadataTitle(await res.text());
+  const responseText = await res.text();
+
+  if (contentType.toLowerCase().includes("json")) {
+    try {
+      return getJsonMetadataTitle(JSON.parse(responseText));
+    } catch {
+      return getTextMetadataTitle(responseText);
+    }
+  }
+
+  return getTextMetadataTitle(responseText);
+};
+
+const isAbortError = (error: unknown) => {
+  if (!error || typeof error !== "object" || !("name" in error)) return false;
+
+  return typeof error.name === "string" && error.name === "AbortError";
 };
 
 function MarqueeTrackTitle({ title }: { title: string }) {
-  const displayTitle = title || "LIVE STREAM";
+  const displayTitle = normalizePlaybackTitle(title);
   const [containerWidth, setContainerWidth] = useState(0);
   const [textWidth, setTextWidth] = useState(0);
   const translateX = useSharedValue(0);
-  const shouldAnimate =
-    containerWidth > 0 && textWidth > 0;
+  const shouldAnimate = containerWidth > 0 && textWidth > containerWidth + 2;
 
   const onContainerLayout = useCallback((event: LayoutChangeEvent) => {
     const nextWidth = Math.ceil(event.nativeEvent.layout.width);
@@ -472,18 +571,18 @@ function MarqueeTrackTitle({ title }: { title: string }) {
           shouldAnimate ? marqueeStyle : undefined,
         ]}
       >
-        <Text
-          style={animatedTextStyle}
-          numberOfLines={1}
-          ellipsizeMode="clip"
-        >
+        <Text style={animatedTextStyle} numberOfLines={1} ellipsizeMode="clip">
           {displayTitle}
         </Text>
         {shouldAnimate ? (
           <>
             <View style={styles.marqueeSpacer} />
             <Text
-              style={[styles.songTitle, styles.marqueeDuplicate, { width: textWidth }]}
+              style={[
+                styles.songTitle,
+                styles.marqueeDuplicate,
+                { width: textWidth },
+              ]}
               numberOfLines={1}
               ellipsizeMode="clip"
             >
@@ -558,7 +657,7 @@ export default function RadioPlayer() {
     Record<string, true>
   >({});
   const [refreshing, setRefreshing] = useState(false);
-  const [trackTitle, setTrackTitle] = useState("LIVE STREAM");
+  const [trackTitle, setTrackTitle] = useState(DEFAULT_TRACK_TITLE);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [autoPlayEnabled] = useState(true);
   const [playbackIntent, setPlaybackIntent] = useState<PlaybackIntent>("idle");
@@ -590,9 +689,9 @@ export default function RadioPlayer() {
   const trackTitleRef = useRef(trackTitle);
   const lockScreenActiveRef = useRef(false);
 
-  const wave1 = useSharedValue(0);
-  const wave2 = useSharedValue(0);
-  const wave3 = useSharedValue(0);
+  const wave1 = useSharedValue(1);
+  const wave2 = useSharedValue(1);
+  const wave3 = useSharedValue(1);
   const spin = useSharedValue(0);
 
   const audioSource = useMemo(
@@ -612,12 +711,62 @@ export default function RadioPlayer() {
       getPreferredStreamOption(streamOptions),
     [selectedStreamId, streamOptions],
   );
-  const mainMetadataUrl = useMemo(
-    () =>
-      getStreamMetadataUrl(getPreferredStreamOption(streamOptions)) ||
-      FALLBACK_METADATA_URL,
-    [streamOptions],
-  );
+  const mainMetadataUrl = useMemo(() => {
+    const preferredOption = getPreferredStreamOption(streamOptions);
+    return (
+      getValidMetadataUrl(
+        getStreamMetadataUrl(preferredOption),
+        preferredOption?.url,
+      ) ||
+      getValidMetadataUrl(ENV_STREAM_METADATA_URL, preferredOption?.url) ||
+      FALLBACK_METADATA_URL
+    );
+  }, [streamOptions]);
+  const metadataCandidates = useMemo(() => {
+    const selectedMetadataUrl = getValidMetadataUrl(
+      getStreamMetadataUrl(selectedStreamOption),
+      STREAM_URL,
+    );
+    const selectedStatusUrl = getStreamStatusMetadataUrl(
+      selectedStreamOption?.url || STREAM_URL,
+    );
+    const preferredOption = getPreferredStreamOption(streamOptions);
+    const preferredMetadataUrl = getValidMetadataUrl(
+      getStreamMetadataUrl(preferredOption),
+      preferredOption?.url,
+    );
+    const envMetadataUrl = getValidMetadataUrl(
+      ENV_STREAM_METADATA_URL,
+      STREAM_URL,
+    );
+    const defaultMetadataUrl = getValidMetadataUrl(
+      DEFAULT_METADATA_URL,
+      STREAM_URL,
+    );
+    const mainStatusUrl = getStreamStatusMetadataUrl(preferredOption?.url);
+
+    return [
+      selectedMetadataUrl,
+      preferredMetadataUrl,
+      envMetadataUrl,
+      metadataUrl,
+      mainMetadataUrl,
+      defaultMetadataUrl,
+      selectedStatusUrl,
+      mainStatusUrl,
+    ].filter(
+      (url, index, urls): url is string =>
+        Boolean(url) &&
+        !isLikelyAudioStreamUrl(url, STREAM_URL) &&
+        urls.indexOf(url) === index,
+    );
+  }, [
+    STREAM_URL,
+    mainMetadataUrl,
+    metadataUrl,
+    selectedStreamOption,
+    streamOptions,
+  ]);
 
   const getPlaybackMetadata = useCallback(
     (title = trackTitleRef.current) => ({
@@ -748,8 +897,7 @@ export default function RadioPlayer() {
     Boolean(statusMessage) && (!shouldDelayStatusPopup || showDelayedStatus);
   const isWaveformActive =
     radioPlayerState === "playing" || isLoadingRingActive;
-  const isLogoWaveActive =
-    radioPlayerState !== "offline" && radioPlayerState !== "error";
+  const isLogoWaveActive = isWaveformActive;
 
   useEffect(() => {
     setAudioModeAsync({
@@ -818,9 +966,18 @@ export default function RadioPlayer() {
     setStreamError(null);
     setIsReconnecting(shouldKeepLoading);
     setSTREAM_URL(selectedStreamOption.url);
-    setMetadataUrl(mainMetadataUrl);
-    console.log("Using Stream URL:", selectedStreamOption.url);
-    console.log("Using Metadata URL:", mainMetadataUrl);
+    const nextMetadataUrl =
+      getValidMetadataUrl(
+        getStreamMetadataUrl(selectedStreamOption),
+        selectedStreamOption.url,
+      ) || mainMetadataUrl;
+    setMetadataUrl(
+      nextMetadataUrl || getStreamStatusMetadataUrl(selectedStreamOption.url),
+    );
+    if (__DEV__) {
+      console.log("Using Stream URL:", selectedStreamOption.url);
+      console.log("Using Metadata URL:", nextMetadataUrl || mainMetadataUrl);
+    }
   }, [clearStreamErrorTimer, mainMetadataUrl, selectedStreamOption]);
 
   // ================== FETCH STREAM LINKS ==================
@@ -843,10 +1000,12 @@ export default function RadioPlayer() {
           : getPreferredStreamOption(nextOptions)?.id || "";
       });
     } catch (error) {
-      console.log(
-        "Failed to fetch stream links, using fallback streams:",
-        error,
-      );
+      if (__DEV__) {
+        console.warn(
+          "Failed to fetch stream links, using fallback streams:",
+          error,
+        );
+      }
       const fallbackOptions = buildStreamOptions([]);
       setStreamOptions(fallbackOptions);
       setSelectedStreamId(getPreferredStreamOption(fallbackOptions)?.id || "");
@@ -874,8 +1033,10 @@ export default function RadioPlayer() {
           ? 0
           : Math.min(index, nextCarousels.length - 1),
       );
-    } catch (err) {
-      console.log("Carousels fetch error:", err);
+    } catch (error) {
+      if (__DEV__) {
+        console.warn("Carousels fetch error:", error);
+      }
     } finally {
       setCarouselsLoading(false);
     }
@@ -902,13 +1063,13 @@ export default function RadioPlayer() {
       },
     );
 
-    const handleAdminNotification = (data: {
-      type?: string;
-      notificationType?: string;
-      entityType?: string;
-    }) => {
+    const handleAdminNotification = (data: unknown) => {
+      const payload =
+        data && typeof data === "object"
+          ? (data as Record<string, unknown>)
+          : {};
       const notificationType = String(
-        data.type || data.notificationType || data.entityType || "",
+        payload.type || payload.notificationType || payload.entityType || "",
       ).toUpperCase();
 
       if (notificationType.includes("CAROUSEL")) {
@@ -939,8 +1100,8 @@ export default function RadioPlayer() {
     let controller: AbortController | null = null;
 
     const applyTrackTitle = (title: string) => {
-      const previousTitle = trackTitleRef.current;
-      const nextTitle = title || trackTitleRef.current || "LIVE STREAM";
+      const previousTitle = normalizePlaybackTitle(trackTitleRef.current);
+      const nextTitle = normalizePlaybackTitle(title);
       const titleChanged = nextTitle !== previousTitle;
 
       if (__DEV__ && titleChanged) {
@@ -970,22 +1131,8 @@ export default function RadioPlayer() {
       console.warn(
         reason,
         "trackTitle:",
-        trackTitleRef.current || "LIVE STREAM",
+        normalizePlaybackTitle(trackTitleRef.current),
         error || "",
-      );
-    };
-
-    const getMetadataCandidates = () => {
-      return [
-        mainMetadataUrl,
-        FALLBACK_METADATA_URL,
-        metadataUrl,
-        getStreamMetadataUrl(selectedStreamOption),
-      ].filter(
-        (url, index, urls): url is string =>
-          Boolean(url) &&
-          !isLikelyAudioStreamUrl(url, STREAM_URL) &&
-          urls.indexOf(url) === index,
       );
     };
 
@@ -999,10 +1146,9 @@ export default function RadioPlayer() {
         );
 
         try {
-          const candidates = getMetadataCandidates();
           let nextTitle = "";
 
-          for (const candidateUrl of candidates) {
+          for (const candidateUrl of metadataCandidates) {
             try {
               nextTitle = await fetchMetadataTitleFromUrl(
                 candidateUrl,
@@ -1010,11 +1156,17 @@ export default function RadioPlayer() {
               );
               if (nextTitle) break;
             } catch (error) {
+              if (controller.signal.aborted || isAbortError(error)) return;
               logTerminalTrackTitle("Metadata problem.", error);
             }
           }
 
-          applyTrackTitle(nextTitle);
+          if (controller.signal.aborted) return;
+          if (nextTitle) {
+            applyTrackTitle(nextTitle);
+          } else if (trackTitleRef.current === DEFAULT_TRACK_TITLE) {
+            applyTrackTitle(DEFAULT_TRACK_TITLE);
+          }
         } finally {
           if (timeout) {
             clearTimeout(timeout);
@@ -1022,8 +1174,11 @@ export default function RadioPlayer() {
           }
         }
       } catch (error) {
+        if (controller?.signal.aborted || isAbortError(error)) return;
         logTerminalTrackTitle("Metadata problem.", error);
-        applyTrackTitle("");
+        if (trackTitleRef.current === DEFAULT_TRACK_TITLE) {
+          applyTrackTitle(DEFAULT_TRACK_TITLE);
+        }
       }
     };
 
@@ -1041,10 +1196,8 @@ export default function RadioPlayer() {
     isOffline,
     isPlaying,
     isReconnecting,
-    mainMetadataUrl,
-    metadataUrl,
+    metadataCandidates,
     playbackIntent,
-    selectedStreamOption,
     streamSwitching,
     updatePlaybackTitle,
   ]);
@@ -1066,21 +1219,15 @@ export default function RadioPlayer() {
       wave2.value = 0;
       wave3.value = 0;
       wave1.value = createLogoWave();
-      wave2.value = withDelay(
-        LOGO_WAVE_STAGGER_MS,
-        createLogoWave(),
-      );
-      wave3.value = withDelay(
-        LOGO_WAVE_STAGGER_MS * 2,
-        createLogoWave(),
-      );
+      wave2.value = withDelay(LOGO_WAVE_STAGGER_MS, createLogoWave());
+      wave3.value = withDelay(LOGO_WAVE_STAGGER_MS * 2, createLogoWave());
     } else {
       cancelAnimation(wave1);
       cancelAnimation(wave2);
       cancelAnimation(wave3);
-      wave1.value = withTiming(0, { duration: LOGO_WAVE_RESET_MS });
-      wave2.value = withTiming(0, { duration: LOGO_WAVE_RESET_MS });
-      wave3.value = withTiming(0, { duration: LOGO_WAVE_RESET_MS });
+      wave1.value = withTiming(1, { duration: LOGO_WAVE_RESET_MS });
+      wave2.value = withTiming(1, { duration: LOGO_WAVE_RESET_MS });
+      wave3.value = withTiming(1, { duration: LOGO_WAVE_RESET_MS });
     }
   }, [isLogoWaveActive, wave1, wave2, wave3]);
 
@@ -1160,19 +1307,7 @@ export default function RadioPlayer() {
     const timeout = setTimeout(() => controller.abort(), 8000);
 
     try {
-      const candidates = [
-        mainMetadataUrl,
-        FALLBACK_METADATA_URL,
-        metadataUrl,
-        getStreamMetadataUrl(selectedStreamOption),
-      ].filter(
-        (url, index, urls): url is string =>
-          Boolean(url) &&
-          !isLikelyAudioStreamUrl(url, STREAM_URL) &&
-          urls.indexOf(url) === index,
-      );
-
-      for (const candidateUrl of candidates) {
+      for (const candidateUrl of metadataCandidates) {
         try {
           const nextTitle = await fetchMetadataTitleFromUrl(
             candidateUrl,
@@ -1186,11 +1321,12 @@ export default function RadioPlayer() {
             return;
           }
         } catch (error) {
+          if (controller.signal.aborted || isAbortError(error)) return;
           if (__DEV__) {
             console.warn(
               "Metadata refresh problem.",
               "trackTitle:",
-              trackTitleRef.current || "LIVE STREAM",
+              normalizePlaybackTitle(trackTitleRef.current),
               error,
             );
           }
@@ -1199,13 +1335,7 @@ export default function RadioPlayer() {
     } finally {
       clearTimeout(timeout);
     }
-  }, [
-    STREAM_URL,
-    mainMetadataUrl,
-    metadataUrl,
-    selectedStreamOption,
-    updatePlaybackTitle,
-  ]);
+  }, [metadataCandidates, updatePlaybackTitle]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -1275,7 +1405,7 @@ export default function RadioPlayer() {
       try {
         activatePlaybackTitle(trackTitle);
         player.play();
-      } catch (e) {
+      } catch (error) {
         clearReconnectingTimer();
         if (streamSwitchingRef.current) {
           setIsReconnecting(true);
@@ -1287,7 +1417,9 @@ export default function RadioPlayer() {
           setIsReconnecting(false);
           setStreamError("Stream unavailable. Please try again.");
         }
-        console.warn("Player action failed", e);
+        if (__DEV__) {
+          console.warn("Player action failed", error);
+        }
       }
     },
     [
@@ -1445,8 +1577,10 @@ export default function RadioPlayer() {
         } else {
           await startPlayback("play");
         }
-      } catch (e) {
-        console.warn("Player action failed", e);
+      } catch (error) {
+        if (__DEV__) {
+          console.warn("Player action failed", error);
+        }
       }
     })();
   };
