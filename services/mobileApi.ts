@@ -1,5 +1,6 @@
 import axios, {
   AxiosError,
+  isAxiosError,
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from "axios";
@@ -120,7 +121,7 @@ const isProtectedBrowserChallenge = (payload: unknown) =>
   typeof payload === "string" && BOT_PROTECTION_PATTERN.test(payload);
 
 function normalizeApiError(error: unknown): MobileApiError {
-  if (!axios.isAxiosError(error)) {
+  if (!isAxiosError(error)) {
     return new MobileApiError("Something went wrong.", "unknown");
   }
 

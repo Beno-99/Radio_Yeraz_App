@@ -87,7 +87,7 @@ export default function YouTubePlayer({
         startSeconds: currentSecondsRef.current,
         showFullscreenButton: false,
       }),
-    [autoplay, videoId, fullscreenVisible],
+    [autoplay, videoId],
   );
 
   const fullscreenHtml = useMemo(

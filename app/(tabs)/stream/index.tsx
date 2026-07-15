@@ -492,7 +492,8 @@ function MarqueeTrackTitle({ title }: { title: string }) {
   const [containerWidth, setContainerWidth] = useState(0);
   const [textWidth, setTextWidth] = useState(0);
   const translateX = useSharedValue(0);
-  const shouldAnimate = containerWidth > 0 && textWidth > containerWidth + 2;
+  const shouldAnimate = containerWidth > 0 && textWidth > 0;
+  const marqueeItemWidth = Math.max(textWidth, containerWidth);
 
   const onContainerLayout = useCallback((event: LayoutChangeEvent) => {
     const nextWidth = Math.ceil(event.nativeEvent.layout.width);
@@ -514,7 +515,7 @@ function MarqueeTrackTitle({ title }: { title: string }) {
 
     if (!shouldAnimate) return;
 
-    const loopDistance = textWidth + MARQUEE_GAP;
+    const loopDistance = marqueeItemWidth + MARQUEE_GAP;
     const duration = Math.max(
       MARQUEE_MIN_DURATION_MS,
       loopDistance * MARQUEE_MS_PER_PIXEL,
@@ -523,13 +524,10 @@ function MarqueeTrackTitle({ title }: { title: string }) {
     translateX.value = withDelay(
       MARQUEE_START_DELAY_MS,
       withRepeat(
-        withSequence(
-          withTiming(-loopDistance, {
-            duration,
-            easing: Easing.linear,
-          }),
-          withTiming(0, { duration: 0 }),
-        ),
+        withTiming(-loopDistance, {
+          duration,
+          easing: Easing.linear,
+        }),
         -1,
         false,
       ),
@@ -539,18 +537,18 @@ function MarqueeTrackTitle({ title }: { title: string }) {
       cancelAnimation(translateX);
       translateX.value = 0;
     };
-  }, [displayTitle, shouldAnimate, textWidth, translateX]);
+  }, [displayTitle, marqueeItemWidth, shouldAnimate, translateX]);
 
   const marqueeStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: translateX.value }],
   }));
   const animatedTextStyle =
-    shouldAnimate && textWidth > 0
-      ? [styles.songTitle, { width: textWidth }]
+    shouldAnimate && marqueeItemWidth > 0
+      ? [styles.songTitle, styles.marqueeAnimatedText, { width: marqueeItemWidth }]
       : styles.songTitle;
   const animatedTrackStyle =
-    shouldAnimate && textWidth > 0
-      ? { width: textWidth * 2 + MARQUEE_GAP }
+    shouldAnimate && marqueeItemWidth > 0
+      ? { width: marqueeItemWidth * 2 + MARQUEE_GAP }
       : undefined;
 
   return (
@@ -580,8 +578,9 @@ function MarqueeTrackTitle({ title }: { title: string }) {
             <Text
               style={[
                 styles.songTitle,
+                styles.marqueeAnimatedText,
                 styles.marqueeDuplicate,
-                { width: textWidth },
+                { width: marqueeItemWidth },
               ]}
               numberOfLines={1}
               ellipsizeMode="clip"
@@ -2165,6 +2164,9 @@ const styles = StyleSheet.create({
   },
   marqueeSpacer: {
     width: MARQUEE_GAP,
+  },
+  marqueeAnimatedText: {
+    textAlign: "left",
   },
   songTitle: {
     flexShrink: 0,

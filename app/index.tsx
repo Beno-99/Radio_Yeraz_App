@@ -258,7 +258,28 @@ export default function IntroScreen() {
       isMounted = false;
       runningAnimations.forEach((animation) => animation.stop());
     };
-  }, []);
+  }, [
+    dot1Opacity,
+    dot2Scale,
+    dot3Opacity,
+    lineWidth,
+    liveBadgeOpacity,
+    logoOpacity,
+    logoScale,
+    ring1Opacity,
+    ring1Scale,
+    ring2Opacity,
+    ring2Scale,
+    ring3Opacity,
+    ring3Scale,
+    rotateAnim,
+    screenOpacity,
+    subtitleOpacity,
+    subtitleY,
+    tagOpacity,
+    titleOpacity,
+    titleY,
+  ]);
 
   const spin = rotateAnim.interpolate({
     inputRange: [0, 1],
