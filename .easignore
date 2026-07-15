@@ -1,0 +1,34 @@
+# Dependencies and package-manager caches
+node_modules/
+
+# Expo/Metro local state
+.expo/
+.metro-cache/
+dist/
+web-build/
+
+# Generated native/build output. EAS runs prebuild for this project.
+android/
+ios/
+.gradle-home*/
+.kotlin/
+
+# Local test/debug artifacts
+.codex-run/
+.codex-*.log
+*.log
+*.out.log
+*.err.log
+gradle-*.log
+metro-*.headers.txt
+metro-manifest.json
+media_session*.txt
+notification_*.txt
+*.tsbuildinfo
+
+# Root-level screenshots/check captures
+/*.png
+
+# Local-only examples/backups
+app-example/
+expo old/
