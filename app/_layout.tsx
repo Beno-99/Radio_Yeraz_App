@@ -25,6 +25,7 @@ const APP_BACKGROUND = "#070b14";
 const POST_ID_KEYS = ["postId", "post_id", "targetPostId", "target_post_id"];
 const FALLBACK_POST_ID_KEYS = ["id", "_id"];
 const NOTIFICATION_OPEN_DEDUPE_MS = 5000;
+const NOTIFICATION_OPEN_RETRY_DELAYS_MS = [700, 1800, 3200];
 
 if (Platform.OS !== "web") {
   Notifications.setNotificationHandler({
@@ -163,12 +164,22 @@ export default function RootLayout() {
     postId: string;
     openedAt: number;
   } | null>(null);
+  const notificationOpenRetryTimersRef = useRef<ReturnType<
+    typeof setTimeout
+  >[]>([]);
 
   useEffect(() => {
     if (Platform.OS === "web") return;
 
     let mounted = true;
     let unsubscribeOpen: (() => void) | null = null;
+
+    const navigateToPost = (postId: string) => {
+      router.replace({
+        pathname: "/post/[id]",
+        params: { id: String(postId) },
+      });
+    };
 
     const openPost = (postId: string, notificationKey: string) => {
       if (!postId) return;
@@ -187,9 +198,14 @@ export default function RootLayout() {
       handledNotificationIdsRef.current.add(notificationKey);
       lastNotificationPostOpenRef.current = { postId, openedAt: now };
 
-      router.replace({
-        pathname: "/post/[id]",
-        params: { id: String(postId) },
+      navigateToPost(postId);
+
+      NOTIFICATION_OPEN_RETRY_DELAYS_MS.forEach((delay) => {
+        const timer = setTimeout(() => {
+          navigateToPost(postId);
+        }, delay);
+
+        notificationOpenRetryTimersRef.current.push(timer);
       });
     };
 
@@ -260,6 +276,8 @@ export default function RootLayout() {
       mounted = false;
       unsubscribeOpen?.();
       localOpenSub.remove();
+      notificationOpenRetryTimersRef.current.forEach(clearTimeout);
+      notificationOpenRetryTimersRef.current = [];
     };
   }, [router]);
 
