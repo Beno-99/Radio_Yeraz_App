@@ -1,0 +1,21 @@
+D:\benon2\full-project\radioyeraz\node_modules\expo\node_modules\@expo\cli\build\src\utils\errors.js:130
+    throw error;
+    ^
+
+Error: ENOENT: no such file or directory, watch 'D:\benon2\full-project\radioyeraz\node_modules\.expo-d3wBx2lN\android\build\.transforms\04b2916c6a4590464d8e79d45dfb056e\transformed'
+    at FSWatcher.<computed> (node:internal/fs/watchers:254:19)
+    at Object.watch (node:fs:2515:36)
+    at FallbackWatcher._watchdir (D:\benon2\full-project\radioyeraz\node_modules\metro-file-map\src\watchers\FallbackWatcher.js:119:33)
+    at D:\benon2\full-project\radioyeraz\node_modules\metro-file-map\src\watchers\FallbackWatcher.js:219:22
+    at Walker.<anonymous> (D:\benon2\full-project\radioyeraz\node_modules\metro-file-map\src\watchers\FallbackWatcher.js:358:5)
+    at Walker.emit (node:events:508:28)
+    at D:\benon2\full-project\radioyeraz\node_modules\walker\lib\walker.js:69:16
+    at FSReqCallback.oncomplete (node:fs:180:23) {
+  errno: -4058,
+  syscall: 'watch',
+  code: 'ENOENT',
+  path: 'D:\\benon2\\full-project\\radioyeraz\\node_modules\\.expo-d3wBx2lN\\android\\build\\.transforms\\04b2916c6a4590464d8e79d45dfb056e\\transformed',
+  filename: 'D:\\benon2\\full-project\\radioyeraz\\node_modules\\.expo-d3wBx2lN\\android\\build\\.transforms\\04b2916c6a4590464d8e79d45dfb056e\\transformed'
+}
+
+Node.js v25.2.1
