@@ -5,20 +5,13 @@ const path = require("path");
 const NOTIFICATION_COLOR = "#D71920";
 const NOTIFICATION_ICON_RESOURCE = "@drawable/ic_notification";
 const NOTIFICATION_COLOR_RESOURCE = "@color/notification_color";
-
-const NOTIFICATION_ICON_XML = `<vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="24dp"
-    android:height="24dp"
-    android:viewportWidth="24"
-    android:viewportHeight="24">
-  <path
-      android:fillColor="#FFFFFFFF"
-      android:pathData="M12,14c1.66,0 3,-1.34 3,-3V5c0,-1.66 -1.34,-3 -3,-3S9,3.34 9,5v6c0,1.66 1.34,3 3,3z"/>
-  <path
-      android:fillColor="#FFFFFFFF"
-      android:pathData="M17.3,11c0,3 -2.54,5.1 -5.3,5.1S6.7,14 6.7,11H5c0,3.41 2.72,6.23 6,6.72V21h2v-3.28c3.28,-0.49 6,-3.31 6,-6.72h-1.7z"/>
-</vector>
-`;
+const NOTIFICATION_LOGO_SOURCE = path.join(
+  __dirname,
+  "..",
+  "assets",
+  "images",
+  "icon.png",
+);
 
 const META_ICON = "com.google.firebase.messaging.default_notification_icon";
 const META_COLOR = "com.google.firebase.messaging.default_notification_color";
@@ -82,13 +75,17 @@ module.exports = function withNotificationIcon(config) {
     async (config) => {
       const resDir = path.join(config.modRequest.platformProjectRoot, "app", "src", "main", "res");
       const drawableDir = path.join(resDir, "drawable");
+      const drawableNoDpiDir = path.join(resDir, "drawable-nodpi");
       const valuesDir = path.join(resDir, "values");
-      const iconPath = path.join(drawableDir, "ic_notification.xml");
+      const oldIconPath = path.join(drawableDir, "ic_notification.xml");
+      const iconPath = path.join(drawableNoDpiDir, "ic_notification.png");
       const colorsPath = path.join(valuesDir, "colors.xml");
 
       await fs.promises.mkdir(drawableDir, { recursive: true });
+      await fs.promises.mkdir(drawableNoDpiDir, { recursive: true });
       await fs.promises.mkdir(valuesDir, { recursive: true });
-      await fs.promises.writeFile(iconPath, NOTIFICATION_ICON_XML);
+      await fs.promises.rm(oldIconPath, { force: true });
+      await fs.promises.copyFile(NOTIFICATION_LOGO_SOURCE, iconPath);
 
       let colorsXml = "<resources>\n</resources>\n";
       try {

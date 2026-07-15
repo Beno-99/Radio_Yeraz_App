@@ -75,6 +75,23 @@ export const isLivePostNotificationType = (type: unknown) => {
   );
 };
 
+const isNewPostNotificationType = (type: unknown) => {
+  const normalizedType = normalizeNotificationId(type).toUpperCase();
+  return (
+    normalizedType === "NEW_POST" ||
+    normalizedType === "POST_CREATED" ||
+    normalizedType === "CREATE_POST" ||
+    normalizedType === "POST_PUBLISHED" ||
+    normalizedType === "PUBLISHED_POST" ||
+    (normalizedType.includes("POST") &&
+      (normalizedType.includes("CREATE") ||
+        normalizedType.includes("CREATED") ||
+        normalizedType.includes("PUBLISH") ||
+        normalizedType.includes("PUBLISHED") ||
+        normalizedType.includes("NEW")))
+  );
+};
+
 export const findPostIdInRecord = (record: Record<string, unknown>): string => {
   for (const key of POST_ID_KEYS) {
     const postId = normalizeNotificationId(record[key]);
@@ -140,15 +157,20 @@ export const normalizeNotificationPayload = ({
     getPostIdFromNotificationData(mergedData) ||
     getPostIdFromNotificationData(rawRecord);
   const isLivePost = isLivePostNotificationType(type);
+  const isNewPost = isNewPostNotificationType(type);
   const postTitle = getPostTitle(mergedData) || getPostTitle(rawRecord);
 
   const title =
+    (isNewPost ? "Radio Yeraz shared a new post" : "") ||
     pickString(rawRecord, ["title"]) ||
     pickString(mergedData, ["title"]) ||
     normalizeNotificationId(notification?.title) ||
     (isLivePost ? "Radio Yeraz is live" : "Notification");
 
   const message =
+    (isNewPost
+      ? postTitle || "Tap to read the latest update."
+      : "") ||
     pickString(rawRecord, MESSAGE_KEYS) ||
     pickString(mergedData, MESSAGE_KEYS) ||
     normalizeNotificationId(notification?.body) ||
