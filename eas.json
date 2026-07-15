@@ -12,7 +12,19 @@
       "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://api.radioyeraz.com/api",
+        "EXPO_PUBLIC_MEDIA_URL": "https://api.radioyeraz.com",
+        "EXPO_PUBLIC_SOCKET_URL": "https://api.radioyeraz.com",
+        "EXPO_PUBLIC_YOUTUBE_CHANNEL_URL": "https://youtube.com/@radioyeraz",
+        "EXPO_PUBLIC_STREAM_METADATA_URL": "https://meta.radioyeraz.com/MetaData.txt",
+        "EXPO_PUBLIC_STREAM_URL": "https://streaming05.liveboxstream.uk/proxy/radioye3/stream",
+        "EXPO_PUBLIC_ENABLE_SOCKET_EVENTS": "false"
+      }
     },
     "production": {
       "autoIncrement": true
