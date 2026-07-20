@@ -233,7 +233,7 @@ export default function RootLayout() {
 
       handledNotificationIdsRef.current.add(notificationKey);
       lastNotificationPostOpenRef.current = { postId, openedAt: now };
-      markNotificationOpenIntent();
+      markNotificationOpenIntent(postId);
 
       navigateToPost(postId);
 

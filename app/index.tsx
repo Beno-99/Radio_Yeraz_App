@@ -1,6 +1,6 @@
 // app/index.tsx
 import MarbleBackground from "@/components/MarbleBackground";
-import { hasRecentNotificationOpenIntent } from "@/utils/notificationOpenIntent";
+import { getRecentNotificationOpenPostId } from "@/utils/notificationOpenIntent";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
@@ -251,7 +251,15 @@ export default function IntroScreen() {
     runningAnimations.push(handoffAnimation);
     handoffAnimation.start(({ finished }) => {
       if (finished && isMounted) {
-        if (hasRecentNotificationOpenIntent()) return;
+        const notificationPostId = getRecentNotificationOpenPostId();
+        if (notificationPostId) {
+          router.replace({
+            pathname: "/post/[id]",
+            params: { id: notificationPostId },
+          });
+          return;
+        }
+
         router.replace("/(tabs)/stream");
       }
     });
