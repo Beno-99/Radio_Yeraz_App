@@ -239,7 +239,7 @@ export default function IntroScreen() {
 
     // 9. Handoff while the intro is still visible.
     const handoffAnimation = Animated.sequence([
-      Animated.delay(2300),
+      Animated.delay(4200),
       Animated.timing(screenOpacity, {
         toValue: 0.96,
         duration: 180,
