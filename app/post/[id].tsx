@@ -16,6 +16,10 @@ import {
 import { useVideoProgress } from "@/stores/videoProgressStore";
 import { ApiItemResponse, Post } from "@/types/api";
 import {
+  FEED_IMAGE_FALLBACK_ASPECT_RATIO,
+  getFeedImageAspectRatio,
+} from "@/utils/feedImageSizing";
+import {
   getAbsoluteMediaUrl,
   getPostMediaType,
   getSafeExternalUrl,
@@ -143,6 +147,9 @@ export default function PostDetail() {
   const [error, setError] = useState<string | null>(null);
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
   const [imageFailed, setImageFailed] = useState(false);
+  const [imageAspectRatio, setImageAspectRatio] = useState(
+    FEED_IMAGE_FALLBACK_ASPECT_RATIO,
+  );
   const [youtubeEmbedFailed, setYoutubeEmbedFailed] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const currentPostId = getPostFavoriteId(post) || routePostId;
@@ -253,7 +260,26 @@ export default function PostDetail() {
 
   useEffect(() => {
     setImageFailed(false);
-  }, [imageUri]);
+    setImageAspectRatio(FEED_IMAGE_FALLBACK_ASPECT_RATIO);
+
+    if (mediaType !== "image" || !imageUri) return;
+
+    let isMounted = true;
+
+    Image.getSize(
+      imageUri,
+      (width, height) => {
+        if (isMounted) {
+          setImageAspectRatio(getFeedImageAspectRatio(width, height));
+        }
+      },
+      () => undefined,
+    );
+
+    return () => {
+      isMounted = false;
+    };
+  }, [imageUri, mediaType]);
 
   useEffect(() => {
     setYoutubeEmbedFailed(false);
@@ -334,7 +360,11 @@ export default function PostDetail() {
       return (
         <Pressable
           onPress={() => setIsImageViewerVisible(true)}
-          style={styles.media}
+          style={[
+            styles.media,
+            styles.imageMedia,
+            { aspectRatio: imageAspectRatio },
+          ]}
         >
           <Image
             source={{ uri: imageUri }}
@@ -699,6 +729,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#000",
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.08)",
+  },
+  imageMedia: {
+    height: undefined,
   },
   youtubeMedia: {
     height: undefined,

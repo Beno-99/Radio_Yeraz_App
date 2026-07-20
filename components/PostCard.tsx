@@ -8,10 +8,14 @@ import {
   getAbsoluteMediaUrl,
   getPostMediaType,
 } from "@/utils/media";
+import {
+  FEED_IMAGE_FALLBACK_ASPECT_RATIO,
+  getFeedImageAspectRatio,
+} from "@/utils/feedImageSizing";
 import { formatPostLinkLabel, getSafePostLinks } from "@/utils/postLinks";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import { memo, useMemo, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import {
   Image,
   Linking,
@@ -26,8 +30,8 @@ import {
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-const MOBILE_MEDIA_ASPECT_RATIO = 4 / 3;
 const VIDEO_MEDIA_ASPECT_RATIO = 16 / 9;
+const MOBILE_MEDIA_ASPECT_RATIO = FEED_IMAGE_FALLBACK_ASPECT_RATIO;
 
 type PostCardProps = {
   item: Post | MobilePublicPost;
@@ -83,6 +87,7 @@ function PostCard({
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const router = useRouter();
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
+  const [imageAspectRatio, setImageAspectRatio] = useState(MOBILE_MEDIA_ASPECT_RATIO);
 
   const postId = String(item?._id || item?.id || "");
   const isFavorite = useFavoritePostsStore((state) =>
@@ -98,6 +103,28 @@ function PostCard({
   const postedTime = timeAgo(item?.postedDate || item?.createdAt);
   const location = cleanLocation(item?.location);
   const eventDate = formatDate(item?.eventDate);
+
+  useEffect(() => {
+    setImageAspectRatio(MOBILE_MEDIA_ASPECT_RATIO);
+
+    if (mediaType !== "image" || !imageUri) return;
+
+    let isMounted = true;
+
+    Image.getSize(
+      imageUri,
+      (width, height) => {
+        if (isMounted) {
+          setImageAspectRatio(getFeedImageAspectRatio(width, height));
+        }
+      },
+      () => undefined,
+    );
+
+    return () => {
+      isMounted = false;
+    };
+  }, [imageUri, mediaType]);
 
   const isCompact = screenWidth < 360;
   const isLandscape = screenWidth > screenHeight;
@@ -119,14 +146,18 @@ function PostCard({
   const descriptionSize = isCompact || isLandscape ? 14 : 15;
   const isVideoMedia = mediaType === "youtube" || mediaType === "facebook";
   const mediaAspectRatio =
-    isVideoMedia || isDesktopWeb || isLandscape
+    mediaType === "image"
+      ? imageAspectRatio
+      : isVideoMedia || isDesktopWeb || isLandscape
       ? VIDEO_MEDIA_ASPECT_RATIO
       : MOBILE_MEDIA_ASPECT_RATIO;
   const mediaMaxHeight = isDesktopWeb
     ? 420
     : isLandscape
       ? Math.min(280, Math.max(210, screenHeight * 0.56))
-      : screenWidth * 1.05;
+      : mediaType === "image"
+        ? screenWidth * 1.25
+        : screenWidth * 1.05;
   const mediaFrameStyle = isLandscape
     ? {
         height: mediaMaxHeight,
