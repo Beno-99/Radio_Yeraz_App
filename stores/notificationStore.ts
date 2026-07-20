@@ -49,7 +49,10 @@ const countUnread = (notifications: AppNotification[]) =>
 interface NotificationStore {
   notifications: AppNotification[];
   unreadCount: number;
-  addNotification: (n: AppNotification) => void;
+  addNotification: (
+    n: AppNotification,
+    options?: { suppressSound?: boolean },
+  ) => void;
   setNotifications: (ns: AppNotification[]) => void;
   setUnreadCount: (count: number) => void;
   clearUnread: () => void;
@@ -63,7 +66,7 @@ export const useNotificationStore = create<NotificationStore>()(
       notifications: [],
       unreadCount: 0,
 
-      addNotification: (n) => {
+      addNotification: (n, options) => {
         const { notifications } = get();
         const incomingIds = [n.id, n._id].filter(Boolean);
 
@@ -81,7 +84,9 @@ export const useNotificationStore = create<NotificationStore>()(
 
         const filtered = filterFreshNotifications(notifications);
 
-        notificationSoundService.play();
+        if (!options?.suppressSound) {
+          notificationSoundService.play();
+        }
         const nextNotifications = [n, ...filtered].slice(0, 50);
 
         set({

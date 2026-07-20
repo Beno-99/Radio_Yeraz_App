@@ -4,6 +4,9 @@ import FirebaseNotificationListener from "@/components/FirebaseNotificationListe
 import FixedTabBar from "@/components/FixedTabBar";
 import { NetworkContext, NetworkProvider } from "@/components/NetworkProvider";
 import { OfflineScreen } from "@/components/OfflineScreen";
+import { useNotificationStore } from "@/stores/notificationStore";
+import { markNotificationOpenIntent } from "@/utils/notificationOpenIntent";
+import { normalizeNotificationPayload } from "@/utils/notificationPayload";
 import { getApp } from "@react-native-firebase/app";
 
 import {
@@ -181,7 +184,39 @@ export default function RootLayout() {
       });
     };
 
-    const openPost = (postId: string, notificationKey: string) => {
+    const addOpenedNotificationToBell = (
+      payload: ReturnType<typeof normalizeNotificationPayload>,
+    ) => {
+      if (!payload) return;
+
+      const id =
+        payload.id ||
+        payload._id ||
+        payload.postId ||
+        `opened-${Date.now()}`;
+
+      useNotificationStore.getState().addNotification(
+        {
+          id,
+          _id: payload._id,
+          title: payload.title,
+          message: payload.message,
+          type: payload.type,
+          data: payload.data,
+          createdAt: payload.createdAt,
+          isRead: true,
+        },
+        { suppressSound: true },
+      );
+    };
+
+    const openPost = (
+      postId: string,
+      notificationKey: string,
+      payload: ReturnType<typeof normalizeNotificationPayload>,
+    ) => {
+      addOpenedNotificationToBell(payload);
+
       if (!postId) return;
       if (handledNotificationIdsRef.current.has(notificationKey)) return;
 
@@ -197,6 +232,7 @@ export default function RootLayout() {
 
       handledNotificationIdsRef.current.add(notificationKey);
       lastNotificationPostOpenRef.current = { postId, openedAt: now };
+      markNotificationOpenIntent();
 
       navigateToPost(postId);
 
@@ -212,22 +248,37 @@ export default function RootLayout() {
     const openPostFromRemoteNotification = (
       remoteMessage: FirebaseMessagingTypes.RemoteMessage | null,
     ) => {
-      const postId = getPostIdFromNotification(remoteMessage);
+      const normalized = normalizeNotificationPayload({
+        fallbackId: remoteMessage?.messageId,
+        notification: remoteMessage?.notification,
+        rawData: remoteMessage?.data,
+      });
+      const postId =
+        normalized?.postId || getPostIdFromNotification(remoteMessage);
       const notificationKey = remoteMessage
         ? `fcm:${getNotificationKey(remoteMessage) || String(postId)}`
         : `fcm:${String(postId)}`;
 
-      openPost(postId, notificationKey);
+      openPost(postId, notificationKey, normalized);
     };
 
     const openPostFromLocalNotification = (
       response: Notifications.NotificationResponse | null,
     ) => {
-      const postId = getPostIdFromLocalNotification(response);
+      const normalized = normalizeNotificationPayload({
+        fallbackId: response?.notification.request.identifier,
+        notification: {
+          title: response?.notification.request.content.title,
+          body: response?.notification.request.content.body,
+        },
+        rawData: response?.notification.request.content.data,
+      });
+      const postId =
+        normalized?.postId || getPostIdFromLocalNotification(response);
       const requestId = response?.notification.request.identifier;
       const notificationKey = `local:${requestId || postId}`;
 
-      openPost(postId, notificationKey);
+      openPost(postId, notificationKey, normalized);
       Notifications.clearLastNotificationResponse();
     };
 
