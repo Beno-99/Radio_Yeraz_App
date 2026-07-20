@@ -3,6 +3,7 @@ import { BrowserApiFallbackProvider } from "@/components/BrowserApiFallbackProvi
 import FirebaseNotificationListener from "@/components/FirebaseNotificationListener";
 import FixedTabBar from "@/components/FixedTabBar";
 import { NetworkContext, NetworkProvider } from "@/components/NetworkProvider";
+import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
 import { OfflineScreen } from "@/components/OfflineScreen";
 import { useNotificationStore } from "@/stores/notificationStore";
 import { markNotificationOpenIntent } from "@/utils/notificationOpenIntent";
@@ -361,6 +362,7 @@ export default function RootLayout() {
                 </Stack>
               </AppGate>
               <FixedTabBar />
+              <NotificationPermissionPrompt />
               <StatusBar
                 backgroundColor={APP_BACKGROUND}
                 style="light"

@@ -1,6 +1,5 @@
 import MarbleBackground from "@/components/MarbleBackground";
 import { NetworkContext } from "@/components/NetworkProvider";
-import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
 import PageHeader from "@/components/PageHeader";
 import StreamWaveform from "@/components/StreamWaveform";
 import { extractApiArray, mobileApi } from "@/services/mobileApi";
@@ -2016,7 +2015,6 @@ export default function RadioPlayer() {
           </View>
         </ScrollView>
       </SafeAreaView>
-      <NotificationPermissionPrompt />
     </MarbleBackground>
   );
 }

@@ -3,17 +3,17 @@ import MarbleBackground from "@/components/MarbleBackground";
 import PageHeader from "@/components/PageHeader";
 import PostCard from "@/components/PostCard";
 import {
+  extractApiItem,
+  getApiErrorMessage,
+  isCancelledApiError,
+  mobileApi,
+  MobileApiError,
+} from "@/services/mobileApi";
+import {
   FavoritePostEntry,
   getPostFavoriteId,
   useFavoritePostsStore,
 } from "@/stores/favoritePostsStore";
-import {
-  extractApiItem,
-  getApiErrorMessage,
-  isCancelledApiError,
-  MobileApiError,
-  mobileApi,
-} from "@/services/mobileApi";
 import { ApiItemResponse, MobilePublicPost, Post } from "@/types/api";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -173,7 +173,7 @@ export default function Favorites() {
 
   return (
     <MarbleBackground style={styles.container}>
-      <PageHeader title="Favorites" />
+      <PageHeader />
 
       {favoriteEntries.length === 0 ? (
         <EmptyState
