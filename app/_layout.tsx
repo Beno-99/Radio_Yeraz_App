@@ -163,6 +163,8 @@ const getNotificationKey = (
 
 export default function RootLayout() {
   const router = useRouter();
+  const pathname = usePathname();
+  const isIntroRoute = pathname === "/";
   const handledNotificationIdsRef = useRef(new Set<string>());
   const lastNotificationPostOpenRef = useRef<{
     postId: string;
@@ -362,7 +364,7 @@ export default function RootLayout() {
                 </Stack>
               </AppGate>
               <FixedTabBar />
-              <NotificationPermissionPrompt />
+              {!isIntroRoute ? <NotificationPermissionPrompt /> : null}
               <StatusBar
                 backgroundColor={APP_BACKGROUND}
                 style="light"
