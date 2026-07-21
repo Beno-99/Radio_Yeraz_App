@@ -840,6 +840,19 @@ export default function RadioPlayer() {
     }
   }, []);
 
+  const resetPlayerSource = useCallback(() => {
+    try {
+      player.pause();
+      player.replace(audioSource);
+      player.setActiveForLockScreen(false);
+      lockScreenActiveRef.current = false;
+    } catch (error) {
+      if (__DEV__) {
+        console.warn("Player reset failed", error);
+      }
+    }
+  }, [audioSource, player]);
+
   const radioPlayerState = useMemo<RadioPlayerState>(() => {
     if (isOffline) return "offline";
     if (streamSwitching) return "reconnecting";
@@ -1390,6 +1403,7 @@ export default function RadioPlayer() {
       clearStreamErrorTimer();
       setPlaybackIntent("playing");
       setStreamError(null);
+      resetPlayerSource();
 
       if (mode === "retry") {
         setIsReconnecting(true);
@@ -1426,6 +1440,7 @@ export default function RadioPlayer() {
       activatePlaybackTitle,
       isOffline,
       player,
+      resetPlayerSource,
       trackTitle,
     ],
   );
@@ -1526,12 +1541,14 @@ export default function RadioPlayer() {
       streamSwitchingRef.current = false;
       setStreamSwitching(false);
       setIsReconnecting(false);
+      resetPlayerSource();
     }
   }, [
     clearReconnectingTimer,
     clearStreamErrorTimer,
     clearStreamSwitchTimer,
     isOffline,
+    resetPlayerSource,
   ]);
 
   useEffect(() => {
