@@ -48,6 +48,7 @@
         "android.permission.READ_MEDIA_VIDEO"
       ],
       "package": "com.radioyeraz.radioyeraz",
+      "versionCode": 1,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -95,7 +96,7 @@
           "android": {
             "compileSdkVersion": 36,
             "targetSdkVersion": 35,
-            "buildToolsVersion": "34.0.0",
+            "buildToolsVersion": "35.0.0",
             "kotlinVersion": "2.0.21"
           }
         }
