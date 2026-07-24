@@ -5,7 +5,11 @@ import FixedTabBar from "@/components/FixedTabBar";
 import { NetworkContext, NetworkProvider } from "@/components/NetworkProvider";
 import NotificationPermissionPrompt from "@/components/NotificationPermissionPrompt";
 import { OfflineScreen } from "@/components/OfflineScreen";
-import { useNotificationStore } from "@/stores/notificationStore";
+import OpenedNotificationModal from "@/components/OpenedNotificationModal";
+import {
+  AppNotification,
+  useNotificationStore,
+} from "@/stores/notificationStore";
 import { markNotificationOpenIntent } from "@/utils/notificationOpenIntent";
 import { normalizeNotificationPayload } from "@/utils/notificationPayload";
 import { getApp } from "@react-native-firebase/app";
@@ -161,6 +165,11 @@ const getNotificationKey = (
   return normalizeId(notificationId) || getPostIdFromNotification(remoteMessage);
 };
 
+const isPopupNotificationType = (type?: string) => {
+  const normalizedType = normalizeId(type).toUpperCase();
+  return normalizedType === "BROADCAST" || normalizedType === "GENERAL";
+};
+
 export default function RootLayout() {
   const router = useRouter();
   const pathname = usePathname();
@@ -187,10 +196,10 @@ export default function RootLayout() {
       });
     };
 
-    const addOpenedNotificationToBell = (
+    const getOpenedNotification = (
       payload: ReturnType<typeof normalizeNotificationPayload>,
-    ) => {
-      if (!payload) return;
+    ): AppNotification | null => {
+      if (!payload) return null;
 
       const id =
         payload.id ||
@@ -198,19 +207,29 @@ export default function RootLayout() {
         payload.postId ||
         `opened-${Date.now()}`;
 
-      useNotificationStore.getState().addNotification(
-        {
-          id,
-          _id: payload._id,
-          title: payload.title,
-          message: payload.message,
-          type: payload.type,
-          data: payload.data,
-          createdAt: payload.createdAt,
-          isRead: true,
-        },
-        { suppressSound: true },
-      );
+      return {
+        id,
+        _id: payload._id,
+        title: payload.title,
+        message: payload.message,
+        type: payload.type,
+        data: payload.data,
+        createdAt: payload.createdAt,
+        isRead: true,
+      };
+    };
+
+    const addOpenedNotificationToBell = (
+      payload: ReturnType<typeof normalizeNotificationPayload>,
+    ) => {
+      const notification = getOpenedNotification(payload);
+      if (!notification) return null;
+
+      useNotificationStore
+        .getState()
+        .addNotification(notification, { suppressSound: true });
+
+      return notification;
     };
 
     const openPost = (
@@ -218,7 +237,15 @@ export default function RootLayout() {
       notificationKey: string,
       payload: ReturnType<typeof normalizeNotificationPayload>,
     ) => {
-      addOpenedNotificationToBell(payload);
+      const openedNotification = addOpenedNotificationToBell(payload);
+
+      if (
+        openedNotification &&
+        !postId &&
+        isPopupNotificationType(openedNotification.type)
+      ) {
+        useNotificationStore.getState().openNotification(openedNotification);
+      }
 
       if (!postId) return;
       if (handledNotificationIdsRef.current.has(notificationKey)) return;
@@ -364,6 +391,7 @@ export default function RootLayout() {
                 </Stack>
               </AppGate>
               <FixedTabBar />
+              <OpenedNotificationModal enabled={!isIntroRoute} />
               {!isIntroRoute ? <NotificationPermissionPrompt /> : null}
               <StatusBar
                 backgroundColor={APP_BACKGROUND}

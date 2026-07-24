@@ -14,7 +14,7 @@ import { Platform } from "react-native";
 const shouldShowForegroundSystemNotification = (
   payload: ReturnType<typeof normalizeNotificationPayload>,
 ) => {
-  return payload?.isLivePost || payload?.type === "BROADCAST";
+  return Boolean(payload?.isLivePost);
 };
 
 const scheduleForegroundSystemNotification = async (

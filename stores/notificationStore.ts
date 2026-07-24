@@ -48,6 +48,7 @@ const countUnread = (notifications: AppNotification[]) =>
 
 interface NotificationStore {
   notifications: AppNotification[];
+  openedNotification: AppNotification | null;
   unreadCount: number;
   addNotification: (
     n: AppNotification,
@@ -57,6 +58,8 @@ interface NotificationStore {
   setUnreadCount: (count: number) => void;
   clearUnread: () => void;
   markRead: (id: string) => void;
+  openNotification: (notification: AppNotification) => void;
+  closeOpenedNotification: () => void;
   pruneExpired: () => void;
 }
 
@@ -64,6 +67,7 @@ export const useNotificationStore = create<NotificationStore>()(
   persist(
     (set, get) => ({
       notifications: [],
+      openedNotification: null,
       unreadCount: 0,
 
       addNotification: (n, options) => {
@@ -128,6 +132,11 @@ export const useNotificationStore = create<NotificationStore>()(
             unreadCount: countUnread(notifications),
           };
         }),
+
+      openNotification: (notification) =>
+        set({ openedNotification: notification }),
+
+      closeOpenedNotification: () => set({ openedNotification: null }),
 
       pruneExpired: () =>
         set((state) => {
