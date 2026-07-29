@@ -21,8 +21,8 @@ import {
 } from "@/utils/feedImageSizing";
 import {
   getAbsoluteMediaUrl,
+  getFacebookWatchUrl,
   getPostMediaType,
-  getSafeExternalUrl,
   getYouTubeVideoId,
 } from "@/utils/media";
 import { formatPostLinkLabel, getSafePostLinks } from "@/utils/postLinks";
@@ -254,7 +254,7 @@ export default function PostDetail() {
 
     return routePostId ? useVideoProgress.getState().getProgress(routePostId) : 0;
   }, [routePostId, routeStartTime]);
-  const facebookUrl = getSafeExternalUrl(post?.facebookUrl);
+  const facebookUrl = getFacebookWatchUrl(post?.facebookUrl);
   const externalLinks = useMemo(() => getSafePostLinks(post?.link), [post?.link]);
   const eventDate = formatDate(post?.eventDate);
 

@@ -1,5 +1,6 @@
 import {
   getAbsoluteMediaUrl,
+  getFacebookWatchUrl,
   getPostMediaType,
   getYouTubeThumbnail,
   getYouTubeVideoId,
@@ -10,6 +11,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   Image,
   ImageResizeMode,
+  Linking,
   Pressable,
   StyleProp,
   StyleSheet,
@@ -44,6 +46,7 @@ export default function PostMediaPreview({
   const [youtubeEmbedFailed, setYoutubeEmbedFailed] = useState(false);
   const mediaType = getPostMediaType(post);
   const youtubeVideoId = getYouTubeVideoId(post?.youtubeVideoId, post?.youtubeUrl);
+  const facebookUrl = getFacebookWatchUrl(post?.facebookUrl);
 
   const mediaUri = useMemo(() => {
     if (mediaType === "youtube") {
@@ -76,6 +79,11 @@ export default function PostMediaPreview({
     if (mediaType === "youtube") {
       setYoutubeEmbedFailed(false);
       setYoutubePlaying(true);
+      return;
+    }
+
+    if (mediaType === "facebook" && facebookUrl) {
+      void Linking.openURL(facebookUrl);
       return;
     }
 
@@ -121,6 +129,11 @@ export default function PostMediaPreview({
         <View style={styles.placeholder}>
           <Ionicons name="logo-facebook" size={34} color="#93c5fd" />
           <Text style={styles.placeholderText}>Facebook Video</Text>
+          {facebookUrl ? (
+            <Text style={styles.placeholderAction}>Tap to watch on Facebook</Text>
+          ) : (
+            <Text style={styles.placeholderAction}>Open post for details</Text>
+          )}
         </View>
       );
     }
@@ -194,6 +207,11 @@ const styles = StyleSheet.create({
   placeholderText: {
     color: "#dbeafe",
     fontSize: 13,
+    fontWeight: "700",
+  },
+  placeholderAction: {
+    color: "#93c5fd",
+    fontSize: 12,
     fontWeight: "700",
   },
 });

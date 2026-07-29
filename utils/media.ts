@@ -7,6 +7,13 @@ export const RADIO_YERAZ_YOUTUBE_CHANNEL_URL =
   process.env.EXPO_PUBLIC_YOUTUBE_CHANNEL_URL ||
   "https://youtube.com/@radioyeraz";
 const SAFE_EXTERNAL_PROTOCOLS = new Set(["https:"]);
+const FACEBOOK_HOSTS = new Set([
+  "facebook.com",
+  "www.facebook.com",
+  "m.facebook.com",
+  "web.facebook.com",
+  "fb.watch",
+]);
 
 const getTrimmed = (value?: string | null) =>
   typeof value === "string" ? value.trim() : "";
@@ -34,6 +41,41 @@ export function getSafeExternalUrl(value?: string | null): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+export function getFacebookWatchUrl(value?: string | null): string | undefined {
+  const raw = getTrimmed(value)
+    .replace(/^['"]+|['"]+$/g, "")
+    .trim();
+  if (!raw) return undefined;
+
+  const candidates = [raw];
+  if (/^(?:videos|watch|reel|share)\//i.test(raw)) {
+    candidates.push(`https://www.facebook.com/${raw.replace(/^\/+/, "")}`);
+  }
+
+  for (const candidate of candidates) {
+    try {
+      const parsed = new URL(candidate);
+      if (!["http:", "https:"].includes(parsed.protocol)) continue;
+
+      const host = parsed.hostname.toLowerCase();
+      if (!FACEBOOK_HOSTS.has(host)) continue;
+
+      const hasPath = parsed.pathname
+        .split("/")
+        .map((segment) => segment.trim())
+        .filter(Boolean).length > 0;
+      if (!hasPath) continue;
+
+      parsed.protocol = "https:";
+      parsed.hash = "";
+      parsed.searchParams.delete("fbclid");
+      return parsed.toString();
+    } catch {}
+  }
+
+  return undefined;
 }
 
 export function getAbsoluteMediaUrl(value?: string | null): string | undefined {
@@ -360,7 +402,7 @@ export function getPostMediaType(
     return "youtube";
   }
 
-  if (source === "FACEBOOK" || getSafeExternalUrl(post.facebookUrl)) {
+  if (source === "FACEBOOK" || getFacebookWatchUrl(post.facebookUrl)) {
     return "facebook";
   }
 
