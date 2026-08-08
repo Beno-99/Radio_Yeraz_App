@@ -1,17 +1,14 @@
 import PostLiveBadge from "@/components/PostLiveBadge";
 import PostMediaPreview from "@/components/PostMediaPreview";
+import ZoomableImage from "@/components/ZoomableImage";
 import { useFavoritePostsStore } from "@/stores/favoritePostsStore";
 import { useVideoProgress } from "@/stores/videoProgressStore";
-import ZoomableImage from "@/components/ZoomableImage";
 import { MobilePublicPost, Post } from "@/types/api";
-import {
-  getAbsoluteMediaUrl,
-  getPostMediaType,
-} from "@/utils/media";
 import {
   FEED_IMAGE_FALLBACK_ASPECT_RATIO,
   getFeedImageAspectRatio,
 } from "@/utils/feedImageSizing";
+import { getAbsoluteMediaUrl, getPostMediaType } from "@/utils/media";
 import { formatPostLinkLabel, getSafePostLinks } from "@/utils/postLinks";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -87,7 +84,10 @@ function PostCard({
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const router = useRouter();
   const [isImageViewerVisible, setIsImageViewerVisible] = useState(false);
-  const [imageAspectRatio, setImageAspectRatio] = useState(MOBILE_MEDIA_ASPECT_RATIO);
+  const [imageAspectRatio, setImageAspectRatio] = useState(
+    MOBILE_MEDIA_ASPECT_RATIO,
+  );
+  const [isDescriptionLong, setIsDescriptionLong] = useState(false);
 
   const postId = String(item?._id || item?.id || "");
   const isFavorite = useFavoritePostsStore((state) =>
@@ -99,7 +99,10 @@ function PostCard({
     [item?.mainImage],
   );
   const mediaType = getPostMediaType(item);
-  const externalLinks = useMemo(() => getSafePostLinks(item?.link), [item?.link]);
+  const externalLinks = useMemo(
+    () => getSafePostLinks(item?.link),
+    [item?.link],
+  );
   const postedTime = timeAgo(item?.postedDate || item?.createdAt);
   const location = cleanLocation(item?.location);
   const eventDate = formatDate(item?.eventDate);
@@ -149,8 +152,8 @@ function PostCard({
     mediaType === "image"
       ? imageAspectRatio
       : isVideoMedia || isDesktopWeb || isLandscape
-      ? VIDEO_MEDIA_ASPECT_RATIO
-      : MOBILE_MEDIA_ASPECT_RATIO;
+        ? VIDEO_MEDIA_ASPECT_RATIO
+        : MOBILE_MEDIA_ASPECT_RATIO;
   const mediaMaxHeight = isDesktopWeb
     ? 420
     : isLandscape
@@ -205,7 +208,12 @@ function PostCard({
       }
     }
   };
+  const handleDescriptionLayout = (event: any) => {
+    const maxLines = isLandscape ? 2 : 4;
+    const lines = event.nativeEvent.lines;
 
+    setIsDescriptionLong(lines.length > maxLines);
+  };
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View
@@ -298,14 +306,19 @@ function PostCard({
               {item?.title || "No title"}
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity activeOpacity={0.75} onPress={openPostDetail}>
+            <Text
+              style={[styles.description, { fontSize: descriptionSize }]}
+              numberOfLines={isLandscape ? 2 : 4}
+              onTextLayout={handleDescriptionLayout}
+            >
+              {item?.description || "No description"}
+            </Text>
 
-          <Text
-            style={[styles.description, { fontSize: descriptionSize }]}
-            numberOfLines={isLandscape ? 2 : 4}
-          >
-            {item?.description || "No description"}
-          </Text>
-
+            {isDescriptionLong ? (
+              <Text style={styles.seeMore}>See more</Text>
+            ) : null}
+          </TouchableOpacity>
           {externalLinks.length > 0 ? (
             <View style={styles.linksSection}>
               <View style={styles.linksHeader}>
@@ -481,6 +494,12 @@ const styles = StyleSheet.create({
     fontSize: 15,
     color: "#d1d5db",
     lineHeight: 22,
+  },
+  seeMore: {
+    marginTop: 4,
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#60a5fa",
   },
   linkRow: {
     flexDirection: "row",

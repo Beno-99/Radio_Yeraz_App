@@ -2,7 +2,7 @@
   "expo": {
     "name": "Radio Yeraz",
     "slug": "radioyeraz",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "radioyeraz",
@@ -13,9 +13,7 @@
       "supportsTablet": true,
       "googleServicesFile": "./google-services.json",
       "infoPlist": {
-        "UIBackgroundModes": [
-          "audio"
-        ]
+        "UIBackgroundModes": ["audio"]
       }
     },
     "android": {
@@ -48,7 +46,7 @@
         "android.permission.READ_MEDIA_VIDEO"
       ],
       "package": "com.radioyeraz.radioyeraz",
-      "versionCode": 1,
+      "versionCode": 5,
       "googleServicesFile": "./google-services.json"
     },
     "web": {
@@ -95,8 +93,7 @@
         {
           "android": {
             "compileSdkVersion": 36,
-            "targetSdkVersion": 35,
-            "buildToolsVersion": "35.0.0",
+            "targetSdkVersion": 36,
             "kotlinVersion": "2.0.21"
           }
         }
