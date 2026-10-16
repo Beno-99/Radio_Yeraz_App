@@ -11,10 +11,16 @@
     "ios": {
       "icon": "./assets/images/icon.png",
       "supportsTablet": true,
-      "googleServicesFile": "./google-services.json",
+      "googleServicesFile": "./GoogleService-Info.plist",
       "infoPlist": {
-        "UIBackgroundModes": ["audio"]
-      }
+        "UIBackgroundModes": [
+          "audio",
+          "audio"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.radioyeraz.radioyeraz",
+      "buildNumber": "1"
     },
     "android": {
       "icon": "./assets/images/icon.png",
@@ -71,7 +77,8 @@
         "expo-audio",
         {
           "microphonePermission": false,
-          "recordAudioAndroid": false
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": true
         }
       ],
       "expo-video",
